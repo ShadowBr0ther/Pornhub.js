@@ -31,6 +31,10 @@
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "package.json"
+  ],
   "engines": {
     "node": ">=14.0.0",
     "pnpm": ">=7.0.0"
@@ -46,7 +50,7 @@
     "test:watch": "vitest",
     "prepublishOnly": "rimraf ./dist && pnpm run build && clean-publish",
     "postpublish": "rimraf ./dist ./tmp_release",
-    "postinstall": "npm run build"
+    "install": "npm run build"
   },
   "dependencies": {
     "cheerio": "1.0.0-rc.12",
