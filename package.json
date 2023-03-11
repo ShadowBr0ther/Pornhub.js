@@ -46,7 +46,7 @@
     "test:watch": "vitest",
     "prepublishOnly": "rimraf ./dist && pnpm run build && clean-publish",
     "postpublish": "rimraf ./dist ./tmp_release",
-    "install": "npm run build"
+    "postinstall": "npm run build"
   },
   "dependencies": {
     "cheerio": "1.0.0-rc.12",
