@@ -31,10 +31,6 @@
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
-  "files": [
-    "dist",
-    "package.json"
-  ],
   "engines": {
     "node": ">=14.0.0",
     "pnpm": ">=7.0.0"
