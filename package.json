@@ -49,7 +49,8 @@
     "test:update": "vitest run --update",
     "test:watch": "vitest",
     "prepublishOnly": "rimraf ./dist && pnpm run build && clean-publish",
-    "postpublish": "rimraf ./dist ./tmp_release"
+    "postpublish": "rimraf ./dist ./tmp_release",
+    "install": "npm run build"
   },
   "dependencies": {
     "cheerio": "1.0.0-rc.12",
