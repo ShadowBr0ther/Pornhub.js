@@ -136,6 +136,11 @@ export class Request {
         return res
     }
 
+    toJson(res: Response) {
+        const contentType = res.headers.get('content-type') || ''
+        return contentType.includes('json') ? res.json() : res.text()
+    }
+
     private _buildParams<U extends Record<string, any>>(data: U) {
         const params = new URLSearchParams()
         Object.keys(data).forEach((key) => {

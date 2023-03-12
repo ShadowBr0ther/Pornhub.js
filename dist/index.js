@@ -403,6 +403,7 @@ var Request = class {
   }
   toJson(res) {
     const contentType = res.headers.get("content-type") || "";
+    console.log(contentType);
     return contentType.includes("json") ? res.json() : res.text();
   }
   buildParams(data) {
