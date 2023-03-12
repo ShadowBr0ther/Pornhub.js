@@ -361,7 +361,6 @@ var Request = class {
   }
   toJson(res) {
     const contentType = res.headers.get("content-type") || "";
-    console.log(contentType);
     return contentType.includes("json") ? res.json() : res.text();
   }
   buildParams(data) {
@@ -502,7 +501,6 @@ async function video_embed_code(engine, urlOrId) {
 
 // src/apis/webmaster/utils/videoTransform.ts
 function videoTransform(response) {
-  console.log("videoTransform", response);
   const {
     duration,
     views,
@@ -590,7 +588,6 @@ async function tags(engine, letter) {
 async function video_by_id(engine, urlOrId, thumbsize = "large") {
   const id = UrlParser.getVideoID(urlOrId);
   const result = await engine.request.get(WebmasterRoute.video_by_id(id, thumbsize));
-  console.log("video_by_id", result);
   return videoTransform(result.video);
 }
 
