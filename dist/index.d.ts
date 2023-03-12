@@ -457,7 +457,7 @@ declare class WebMaster {
      * @example
      * const results = await pornhub.webMaster.search('keyword', { page: 2, period: 'weekly' })
     */
-    search(keyword: string, options?: WebmasterSearchOptions): Promise<VideoDetail[]>;
+    search(keyword: string, options?: WebmasterSearchOptions): Promise<(VideoDetail | undefined)[]>;
     /**
      * Get video information by url/id
      * @url https://www.pornhub.com/webmasters/video_by_id?id={ID}&thumbsize=large
@@ -466,7 +466,7 @@ declare class WebMaster {
      * @example
      * const video = await pornhub.webMaster.getVideo('ph5a9634c9a827e')
      */
-    getVideo(urlOrId: string, thumbsize?: ThumbSize): Promise<VideoDetail>;
+    getVideo(urlOrId: string, thumbsize?: ThumbSize): Promise<VideoDetail | undefined>;
     /**
      * Get video active status by url/id (deleted video will be false)
      * @url https://www.pornhub.com/webmasters/is_video_active?id={ID}

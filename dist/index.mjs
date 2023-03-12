@@ -501,6 +501,9 @@ async function video_embed_code(engine, urlOrId) {
 
 // src/apis/webmaster/utils/videoTransform.ts
 function videoTransform(response) {
+  if (!response) {
+    return void 0;
+  }
   const {
     duration,
     views,

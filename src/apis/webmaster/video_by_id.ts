@@ -8,7 +8,7 @@ export interface WebmasterVideoById {
     video: VideoResponse
 }
 
-export async function video_by_id(engine: Engine, urlOrId: string, thumbsize: ThumbSize = 'large'): Promise<VideoDetail> {
+export async function video_by_id(engine: Engine, urlOrId: string, thumbsize: ThumbSize = 'large'): Promise<VideoDetail | undefined> {
     const id = UrlParser.getVideoID(urlOrId)
     const res = await engine.request.get(WebmasterRoute.video_by_id(id, thumbsize))
     const result = await res.json() as WebmasterVideoById
