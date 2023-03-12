@@ -7,7 +7,7 @@ export interface WebmasterSearch {
     videos: VideoResponse[]
 }
 
-export async function search(engine: Engine, keyword: string, options: WebmasterSearchOptions): Promise<VideoDetail[]> {
+export async function search(engine: Engine, keyword: string, options: WebmasterSearchOptions): Promise<(VideoDetail | undefined)[]> {
     try {
         const res = await engine.request.get(WebmasterRoute.search(keyword, options))
         const result = await res.json() as WebmasterSearch

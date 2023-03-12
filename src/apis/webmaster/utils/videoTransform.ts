@@ -1,7 +1,11 @@
 import type { VideoDetail, VideoResponse } from '../../../types'
 
-export function videoTransform(response: VideoResponse): VideoDetail {
+export function videoTransform(response: VideoResponse): VideoDetail | undefined {
     
+    if (!response) {
+        return undefined
+    }
+
     const {
         duration,
         views,
