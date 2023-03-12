@@ -1,6 +1,8 @@
 import type { VideoDetail, VideoResponse } from '../../../types'
 
 export function videoTransform(response: VideoResponse): VideoDetail {
+    
+    console.log('videoTransform', response)
     const {
         duration,
         views,
