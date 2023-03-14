@@ -134,6 +134,9 @@ var Route = {
   modelPage(name) {
     return urlcat(BASE_URL, "/model/:name", { name });
   },
+  modelPageWithVideos(name) {
+    return urlcat(BASE_URL, "/model/:name/videos", { name });
+  },
   channelPage(name) {
     return urlcat(BASE_URL, "/channels/:name", { name });
   },
@@ -516,6 +519,12 @@ var UrlParser = class {
     return name;
   }
   static getModelName(url) {
+    const UrlRule = /[\w]+\.pornhub\.com\/model\/([a-zA-z0-9-]{1,30})/;
+    const name = UrlRule.test(url) ? UrlRule.exec(url)[1] : slugify(url);
+    return name;
+  }
+  static getModelNameVideoPage(url) {
+    url = url.replace(/\/videos$/, "");
     const UrlRule = /[\w]+\.pornhub\.com\/model\/([a-zA-z0-9-]{1,30})/;
     const name = UrlRule.test(url) ? UrlRule.exec(url)[1] : slugify(url);
     return name;
@@ -1241,6 +1250,15 @@ async function modelPage(engine, urlOrName) {
   const $ = getCheerio(html);
   return parseInfo($);
 }
+async function modelVideoPage(engine, urlOrName) {
+  const name = UrlParser.getModelNameVideoPage(urlOrName);
+  if (!name)
+    throw new Error(`Invalid model input: ${urlOrName}`);
+  const url = Route.modelPageWithVideos(name);
+  const html = await engine.request.raw(url);
+  const $ = getCheerio(html);
+  return parseInfo($);
+}
 function parseInfo($) {
   const infoPieces = $("div.infoPiece").toArray();
   const info = Object.fromEntries(infoPieces.map((el) => {
@@ -1255,7 +1273,7 @@ function parseInfo($) {
   const rank = parseReadableNumber(rankEl.text().trim());
   const weeklyRankEl = $("div.infoBoxes > div.rankingInfo > div.infoBox:nth-child(2) > span.big");
   const weeklyRank = parseReadableNumber(weeklyRankEl.text().trim());
-  const linkEl = $("div.mostRecentPornstarVideos > ul.videos > li.videoBox > div.wrap > div.phimage > a");
+  const linkEl = $("div.videoUList > ul.videos > li.videoBox > div.wrap > div.phimage > a");
   let videosFrontpage = [];
   linkEl.each((_, e) => {
     videosFrontpage.push($(e).attr("href"));
@@ -1626,6 +1644,13 @@ var PornHub = class {
    */
   model(urlOrName) {
     return modelPage(this.engine, urlOrName);
+  }
+  /**
+   * Get model information with videos by url/ID
+   * @param urlOrName Model name or page url
+   */
+  modelVideo(urlOrName) {
+    return modelVideoPage(this.engine, urlOrName);
   }
   /**
    * Get autocomplete result by keyword.

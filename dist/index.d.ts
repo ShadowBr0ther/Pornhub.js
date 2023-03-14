@@ -540,6 +540,7 @@ declare class PornHub {
         videoPage(id: string): string;
         pornstarPage(name: string): string;
         modelPage(name: string): string;
+        modelPageWithVideos(name: string): string;
         channelPage(name: string): string;
         albumSearch(keyword: string, { page, segments, order, verified, }: AlbumSearchOptions): string;
         gifSearch(keyword: string, { page, order, sexualOrientation, }: GifSearchOptions): string;
@@ -604,6 +605,11 @@ declare class PornHub {
      * @param urlOrName Model name or page url
      */
     model(urlOrName: string): Promise<ModelPage>;
+    /**
+     * Get model information with videos by url/ID
+     * @param urlOrName Model name or page url
+     */
+    modelVideo(urlOrName: string): Promise<ModelPage>;
     /**
      * Get autocomplete result by keyword.
      */
