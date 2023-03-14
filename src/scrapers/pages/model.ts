@@ -248,7 +248,7 @@ function parseInfo($: CheerioAPI): ModelPage {
     const rankEl = $('div.rankingInfo > .infoBox > span')
     const rank = parseReadableNumber(rankEl.text().trim())
 
-    const weeklyRankEl = $('div.rankingInfo > div.infoBox.rankDetails > big')
+    const weeklyRankEl = $('div.infoBoxes > div.rankingInfo > div.infoBox > span.big:nth-child(1)')
     const weeklyRank = parseReadableNumber(weeklyRankEl.text().trim())
 
     const linkEl = $('div.mostRecentPornstarVideos > ul.videos > li.videoBox > div.wrap > div.phimage > a')
