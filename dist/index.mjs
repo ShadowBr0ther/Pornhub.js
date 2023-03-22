@@ -1,5 +1,5 @@
 // src/apis/route.ts
-import urlcatM from "urlcat";
+import urlcat from "urlcat";
 
 // src/utils/constant.ts
 var BASE_URL = "https://www.pornhub.com";
@@ -43,9 +43,30 @@ var PornstarOrderingMapping = {
   "Most Viewed": "mv",
   "No. of Video": "nv"
 };
+var PornstarListOrderingMapping = {
+  "Most Popular": "",
+  "Most Viewed": "mv",
+  "Top Trending": "t",
+  "Most Subscribed": "ms",
+  "Alphabetical": "a",
+  "No. of Videos": "nv",
+  "Random": "r"
+};
+
+// src/types/SearchPeriod.ts
+var PornstarPopularPeriodMapping = {
+  weekly: "w",
+  monthly: "",
+  yearly: "a"
+};
+var PornstarViewedPeriodMapping = {
+  daily: "t",
+  weekly: "w",
+  monthly: "m",
+  alltime: ""
+};
 
 // src/apis/route.ts
-var urlcat = urlcatM.default ?? urlcatM;
 var Route = {
   mainPage() {
     return BASE_URL;
@@ -169,6 +190,49 @@ var Route = {
       ...durationMin && { min_duration: durationMin },
       ...durationMax && { max_duration: durationMax },
       ...filterCategory && { filter_category: filterCategory }
+    });
+  },
+  /**
+   * @url https://www.pornhub.com/pornstars
+   */
+  pornstarList(param) {
+    const {
+      gay = false,
+      performerType,
+      gender,
+      ethnicity,
+      tattoos,
+      cup,
+      piercings,
+      hair,
+      breastType,
+      ageFrom = 18,
+      ageTo = 99,
+      order = "Most Popular",
+      page = 1
+    } = param;
+    const getYesNo = (v) => v ? "yes" : "no";
+    const o = PornstarListOrderingMapping[order];
+    const age = `${ageFrom}-${ageTo}`;
+    return urlcat(BASE_URL, gay ? "/gay/pornstars" : "/pornstars", {
+      ...performerType && { performerType },
+      ...gender && { gender },
+      ...ethnicity && { ethnicity },
+      ...typeof piercings === "boolean" && { piercings: getYesNo(piercings) },
+      ...age !== "18-99" && { age },
+      ...cup && { cup: cup.toLowerCase() },
+      ...breastType && { breastType },
+      ...hair && { hair },
+      ...typeof tattoos === "boolean" && { tattoos: getYesNo(tattoos) },
+      ...o && { o },
+      ...param.order === "Alphabetical" && { letter: (param.letter ?? "a").toLowerCase() },
+      ...param.order === "Most Popular" && param.timeRange && param.timeRange !== "monthly" && {
+        timeRange: PornstarPopularPeriodMapping[param.timeRange]
+      },
+      ...param.order === "Most Viewed" && param.timeRange && param.timeRange !== "alltime" && {
+        timeRange: PornstarViewedPeriodMapping[param.timeRange]
+      },
+      ...page !== 1 && { page }
     });
   }
 };
@@ -928,8 +992,7 @@ function parseResult($) {
 }
 
 // src/scrapers/search/pornstar.ts
-import urlcatM2 from "urlcat";
-var urlcat2 = urlcatM2.default ?? urlcatM2;
+import urlcat2 from "urlcat";
 async function pornstarSearch(engine, keyword, options) {
   const url = Route.pornstarSearch(keyword, options);
   const html = await engine.request.raw(url);
@@ -959,13 +1022,12 @@ function parseResult2($) {
 }
 
 // src/scrapers/search/gif.ts
-import urlcatM3 from "urlcat";
+import urlcat3 from "urlcat";
 
 // src/utils/utils.ts
 var removeProtectionBracket = (str) => str.replace(/\(.+?\)/g, "");
 
 // src/scrapers/search/gif.ts
-var urlcat3 = urlcatM3.default ?? urlcatM3;
 async function gifSearch(engine, keyword, options) {
   const url = Route.gifSearch(keyword, options);
   const html = await engine.request.raw(url);
@@ -977,7 +1039,7 @@ async function gifSearch(engine, keyword, options) {
   };
 }
 function parseResult3($) {
-  const list = $("ul.gifLink li.gifVideoBlock ");
+  const list = $("ul.gifLink li.gifVideoBlock");
   const result = list.map((_, el) => {
     const item = $(el);
     const video = item.find("video");
@@ -995,8 +1057,7 @@ function parseResult3($) {
 }
 
 // src/scrapers/search/video.ts
-import urlcatM4 from "urlcat";
-var urlcat4 = urlcatM4.default ?? urlcatM4;
+import urlcat4 from "urlcat";
 async function videoSearch(engine, keyword, options) {
   const url = Route.videoSearch(keyword, options);
   const html = await engine.request.raw(url);
@@ -1515,6 +1576,45 @@ function parseInfo2($) {
   };
 }
 
+// src/scrapers/search/pornstars.ts
+import urlcat5 from "urlcat";
+async function pornstarList(engine, options) {
+  const url = Route.pornstarList(options);
+  const html = await engine.request.raw(url);
+  const $ = getCheerio(html);
+  return {
+    data: parseResult5($),
+    paging: parsePaging($)
+  };
+}
+function parseResult5($) {
+  const list = $("#popularPornstars li.performerCard");
+  const result = list.map((_, el) => {
+    const item = $(el);
+    const name = item.find(".performerCardName").text().trim();
+    const path = getAttribute(item.find("a.title"), "href", "");
+    const url = urlcat5(BASE_URL, path);
+    const views = item.find(".viewsNumber").text().replace("Views", "").trim() || "0";
+    const videoNum = parseInt(item.find(".videosNumber").text().replace("Videos", "")) || 0;
+    const rank = parseInt(item.find(".rank_number").text()) || 0;
+    const img = item.find("img");
+    const photo = getDataAttribute(img, "thumb_url", "");
+    const verified = item.find(".verifiedPornstar").length > 0;
+    const awarded = item.find(".trophyPornStar").length > 0;
+    return {
+      name,
+      url,
+      views,
+      videoNum,
+      rank,
+      photo,
+      verified,
+      awarded
+    };
+  }).get();
+  return result;
+}
+
 // src/index.ts
 var PornHub = class {
   constructor(customFetch) {
@@ -1646,6 +1746,12 @@ var PornHub = class {
   searchVideo(keyword, options = {}) {
     return videoSearch(this.engine, keyword, options);
   }
+  /**
+   * Get pornstar list.
+   */
+  pornstarList(options = {}) {
+    return pornstarList(this.engine, options);
+  }
 };
 export {
   AlbumOrderingMapping,
@@ -1653,7 +1759,10 @@ export {
   HttpStatusError,
   IllegalError,
   PornHub,
+  PornstarListOrderingMapping,
   PornstarOrderingMapping,
+  PornstarPopularPeriodMapping,
+  PornstarViewedPeriodMapping,
   VideoOrderingMapping
 };
 //# sourceMappingURL=index.mjs.map

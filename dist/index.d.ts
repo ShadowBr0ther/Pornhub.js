@@ -50,10 +50,12 @@ type VideoSearchOrdering = 'Most Relevant' | 'Most Recent' | 'Most Viewed' | 'To
 type GifSearchOrdering = 'Most Relevant' | 'Most Recent' | 'Most Viewed' | 'Top Rated';
 type AlbumSearchOrdering = 'Most Relevant' | 'Most Recent' | 'Most Viewed' | 'Top Rated';
 type PornstarSearchOrdering = 'Most Relevant' | 'Most Popular' | 'Most Viewed' | 'No. of Video';
+type PornstarListOrdering = 'Most Popular' | 'Most Viewed' | 'Top Trending' | 'Most Subscribed' | 'Alphabetical' | 'No. of Videos' | 'Random';
 declare const VideoOrderingMapping: Record<VideoSearchOrdering, string>;
 declare const GifOrderingMapping: Record<GifSearchOrdering, string>;
 declare const AlbumOrderingMapping: Record<AlbumSearchOrdering, string>;
 declare const PornstarOrderingMapping: Record<PornstarSearchOrdering, string>;
+declare const PornstarListOrderingMapping: Record<PornstarListOrdering, string>;
 
 interface WebmasterSearchOptions {
     page?: number;
@@ -79,6 +81,31 @@ interface PornstarSearchOptions {
     page?: number;
     order?: PornstarSearchOrdering;
 }
+type PornstarListOptions = {
+    gay?: boolean;
+    performerType?: 'pornstar' | 'amateur' | (string & {});
+    gender?: 'male' | 'female' | 'm2f' | 'f2m' | (string & {});
+    ethnicity?: 'asian' | 'black' | 'indian' | 'latin' | 'middle eastern' | 'mixed' | 'white' | 'other' | (string & {});
+    tattoos?: boolean;
+    cup?: 'A' | 'B' | 'C' | 'D' | 'E' | 'F-Z' | (string & {});
+    piercings?: boolean;
+    hair?: 'auburn' | 'bald' | 'black' | 'blonde' | 'brown' | 'brunette' | 'grey' | 'red' | 'various' | 'other' | (string & {});
+    breastType?: 'natural' | 'fake' | (string & {});
+    ageFrom?: 18 | 20 | 30 | 40;
+    ageTo?: 20 | 30 | 40 | 99;
+    page?: number;
+} & ({
+    order?: Exclude<PornstarListOrdering, 'Alphabetical' | 'Most Popular' | 'Most Viewed'>;
+} | {
+    order: 'Alphabetical';
+    letter?: 'num' | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M' | 'N' | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z';
+} | {
+    order: 'Most Popular';
+    timeRange?: PornstarSearchPopularPeriod;
+} | {
+    order: 'Most Viewed';
+    timeRange?: PornstarSearchViewedPeriod;
+});
 interface VideoSearchOptions {
     page?: number;
     order?: VideoSearchOrdering;
@@ -95,6 +122,10 @@ interface AutoCompleteOptions {
 }
 
 type SearchPeriod = 'weekly' | 'monthly' | 'alltime';
+type PornstarSearchPopularPeriod = 'weekly' | 'monthly' | 'yearly';
+type PornstarSearchViewedPeriod = 'daily' | 'weekly' | 'monthly' | 'alltime';
+declare const PornstarPopularPeriodMapping: Record<PornstarSearchPopularPeriod, string>;
+declare const PornstarViewedPeriodMapping: Record<PornstarSearchViewedPeriod, string>;
 
 type Segment = 'female' | 'gay' | 'male' | 'misc' | 'straight' | 'transgender' | 'uncategorized' | (string & {});
 
@@ -155,6 +186,17 @@ interface VideoResponse {
         category: string;
     }[];
     segment: Segment;
+}
+
+interface PornstarListResult {
+    name: string;
+    url: string;
+    views: string;
+    videoNum: number;
+    rank: number;
+    photo: string;
+    verified: boolean;
+    awarded: boolean;
 }
 
 interface VideoSearchResult {
@@ -546,6 +588,7 @@ declare class PornHub {
         gifSearch(keyword: string, { page, order, sexualOrientation, }: GifSearchOptions): string;
         pornstarSearch(keyword: string, { page, order, }: PornstarSearchOptions): string;
         videoSearch(keyword: string, { page, order, hd, production, durationMin, durationMax, filterCategory, }: VideoSearchOptions): string;
+        pornstarList(param: PornstarListOptions): string;
     };
     constructor(customFetch?: ((input: RequestInfo | URL, init?: RequestInit | undefined) => Promise<Response>) | undefined);
     setAgent(agent: RequestInit['agent']): void;
@@ -673,6 +716,13 @@ declare class PornHub {
         paging: Paging;
         counting: Counting;
     }>;
+    /**
+     * Get pornstar list.
+     */
+    pornstarList(options?: PornstarListOptions): Promise<{
+        data: PornstarListResult[];
+        paging: Paging;
+    }>;
 }
 
-export { AlbumOrderingMapping, AlbumPage, AlbumSearchOptions, AlbumSearchOrdering, AlbumSearchResult, AutoCompleteOptions, Counting, GifOrderingMapping, GifSearchOptions, GifSearchOrdering, GifSearchResult, HttpStatusError, IllegalError, LowerLetter, ModelPage, Paging, PhotoPage, PornHub, PornstarOrderingMapping, PornstarPage, PornstarSearchOptions, PornstarSearchOrdering, PornstarSearchResult, SearchPeriod, Segment, SexualOrientation, ThumbSize, VideoDetail, VideoOrderingMapping, VideoPage, VideoResponse, VideoSearchOptions, VideoSearchOrdering, VideoSearchResult, WebmasterCategory, WebmasterDeleted, WebmasterEmbed, WebmasterSearch, WebmasterSearchOptions, WebmasterSearchOrdering, WebmasterStar, WebmasterStars, WebmasterStarsDetailed, WebmasterTags, WebmasterVideoById, WebmasterVideoIsActive };
+export { AlbumOrderingMapping, AlbumPage, AlbumSearchOptions, AlbumSearchOrdering, AlbumSearchResult, AutoCompleteOptions, Counting, GifOrderingMapping, GifSearchOptions, GifSearchOrdering, GifSearchResult, HttpStatusError, IllegalError, LowerLetter, ModelPage, Paging, PhotoPage, PornHub, PornstarListOptions, PornstarListOrdering, PornstarListOrderingMapping, PornstarOrderingMapping, PornstarPage, PornstarPopularPeriodMapping, PornstarSearchOptions, PornstarSearchOrdering, PornstarSearchPopularPeriod, PornstarSearchResult, PornstarSearchViewedPeriod, PornstarViewedPeriodMapping, SearchPeriod, Segment, SexualOrientation, ThumbSize, VideoDetail, VideoOrderingMapping, VideoPage, VideoResponse, VideoSearchOptions, VideoSearchOrdering, VideoSearchResult, WebmasterCategory, WebmasterDeleted, WebmasterEmbed, WebmasterSearch, WebmasterSearchOptions, WebmasterSearchOrdering, WebmasterStar, WebmasterStars, WebmasterStarsDetailed, WebmasterTags, WebmasterVideoById, WebmasterVideoIsActive };

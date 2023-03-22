@@ -35,7 +35,10 @@ __export(src_exports, {
   HttpStatusError: () => HttpStatusError,
   IllegalError: () => IllegalError,
   PornHub: () => PornHub,
+  PornstarListOrderingMapping: () => PornstarListOrderingMapping,
   PornstarOrderingMapping: () => PornstarOrderingMapping,
+  PornstarPopularPeriodMapping: () => PornstarPopularPeriodMapping,
+  PornstarViewedPeriodMapping: () => PornstarViewedPeriodMapping,
   VideoOrderingMapping: () => VideoOrderingMapping
 });
 module.exports = __toCommonJS(src_exports);
@@ -85,9 +88,30 @@ var PornstarOrderingMapping = {
   "Most Viewed": "mv",
   "No. of Video": "nv"
 };
+var PornstarListOrderingMapping = {
+  "Most Popular": "",
+  "Most Viewed": "mv",
+  "Top Trending": "t",
+  "Most Subscribed": "ms",
+  "Alphabetical": "a",
+  "No. of Videos": "nv",
+  "Random": "r"
+};
+
+// src/types/SearchPeriod.ts
+var PornstarPopularPeriodMapping = {
+  weekly: "w",
+  monthly: "",
+  yearly: "a"
+};
+var PornstarViewedPeriodMapping = {
+  daily: "t",
+  weekly: "w",
+  monthly: "m",
+  alltime: ""
+};
 
 // src/apis/route.ts
-var urlcat = import_urlcat.default.default ?? import_urlcat.default;
 var Route = {
   mainPage() {
     return BASE_URL;
@@ -96,13 +120,13 @@ var Route = {
    * @url https://www.pornhub.com/front/authenticate
    */
   authenticate() {
-    return urlcat(BASE_URL, "/front/authenticate");
+    return (0, import_urlcat.default)(BASE_URL, "/front/authenticate");
   },
   /**
    * @url https://www.pornhub.com/user/logout
    */
   logout(token) {
-    return urlcat(BASE_URL, "/user/logout", { token });
+    return (0, import_urlcat.default)(BASE_URL, "/user/logout", { token });
   },
   /**
    * @url https://www.pornhub.com/video/search_autocomplete?q=random&orientation=straight&pornstars=1&alt=0&token=xxx
@@ -111,7 +135,7 @@ var Route = {
     token,
     sexualOrientation = "straight"
   }) {
-    return urlcat(BASE_URL, "/video/search_autocomplete", {
+    return (0, import_urlcat.default)(BASE_URL, "/video/search_autocomplete", {
       q: keyword,
       orientation: sexualOrientation,
       pornstars: true,
@@ -120,25 +144,25 @@ var Route = {
     });
   },
   albumPage(id) {
-    return urlcat(BASE_URL, "/album/:id", { id });
+    return (0, import_urlcat.default)(BASE_URL, "/album/:id", { id });
   },
   photoPage(id) {
-    return urlcat(BASE_URL, "/photo/:id", { id });
+    return (0, import_urlcat.default)(BASE_URL, "/photo/:id", { id });
   },
   videoPage(id) {
-    return urlcat(BASE_URL, "/view_video.php", { viewkey: id });
+    return (0, import_urlcat.default)(BASE_URL, "/view_video.php", { viewkey: id });
   },
   pornstarPage(name) {
-    return urlcat(BASE_URL, "/pornstar/:name", { name });
+    return (0, import_urlcat.default)(BASE_URL, "/pornstar/:name", { name });
   },
   modelPage(name) {
-    return urlcat(BASE_URL, "/model/:name", { name });
+    return (0, import_urlcat.default)(BASE_URL, "/model/:name", { name });
   },
   modelPageWithVideos(name) {
-    return urlcat(BASE_URL, "/model/:name/videos", { name });
+    return (0, import_urlcat.default)(BASE_URL, "/model/:name/videos", { name });
   },
   channelPage(name) {
-    return urlcat(BASE_URL, "/channels/:name", { name });
+    return (0, import_urlcat.default)(BASE_URL, "/channels/:name", { name });
   },
   /**
    * @url https://www.pornhub.com/albums/female-straight-uncategorized?search=random
@@ -150,7 +174,7 @@ var Route = {
     verified = false
   }) {
     const o = AlbumOrderingMapping[order];
-    return urlcat(BASE_URL, "/albums/:segment", {
+    return (0, import_urlcat.default)(BASE_URL, "/albums/:segment", {
       segment: dashify(segments),
       search: searchify(keyword),
       page,
@@ -168,7 +192,7 @@ var Route = {
   }) {
     const o = GifOrderingMapping[order];
     const pathTemplate = sexualOrientation === "straight" ? "/gifs/search" : "/:sexualOrientation/gifs/search";
-    return urlcat(BASE_URL, pathTemplate, {
+    return (0, import_urlcat.default)(BASE_URL, pathTemplate, {
       ...sexualOrientation !== "straight" && { sexualOrientation },
       search: searchify(keyword),
       ...page !== 1 && { page },
@@ -183,7 +207,7 @@ var Route = {
     order = "Most Relevant"
   }) {
     const o = PornstarOrderingMapping[order];
-    return urlcat(BASE_URL, "/pornstars/search", {
+    return (0, import_urlcat.default)(BASE_URL, "/pornstars/search", {
       search: searchify(keyword),
       ...page !== 1 && { page },
       ...o && { o }
@@ -202,7 +226,7 @@ var Route = {
     filterCategory
   }) {
     const o = VideoOrderingMapping[order];
-    return urlcat(BASE_URL, "/video/search", {
+    return (0, import_urlcat.default)(BASE_URL, "/video/search", {
       search: searchify(keyword),
       ...page !== 1 && { page },
       ...o && { o },
@@ -212,33 +236,76 @@ var Route = {
       ...durationMax && { max_duration: durationMax },
       ...filterCategory && { filter_category: filterCategory }
     });
+  },
+  /**
+   * @url https://www.pornhub.com/pornstars
+   */
+  pornstarList(param) {
+    const {
+      gay = false,
+      performerType,
+      gender,
+      ethnicity,
+      tattoos,
+      cup,
+      piercings,
+      hair,
+      breastType,
+      ageFrom = 18,
+      ageTo = 99,
+      order = "Most Popular",
+      page = 1
+    } = param;
+    const getYesNo = (v) => v ? "yes" : "no";
+    const o = PornstarListOrderingMapping[order];
+    const age = `${ageFrom}-${ageTo}`;
+    return (0, import_urlcat.default)(BASE_URL, gay ? "/gay/pornstars" : "/pornstars", {
+      ...performerType && { performerType },
+      ...gender && { gender },
+      ...ethnicity && { ethnicity },
+      ...typeof piercings === "boolean" && { piercings: getYesNo(piercings) },
+      ...age !== "18-99" && { age },
+      ...cup && { cup: cup.toLowerCase() },
+      ...breastType && { breastType },
+      ...hair && { hair },
+      ...typeof tattoos === "boolean" && { tattoos: getYesNo(tattoos) },
+      ...o && { o },
+      ...param.order === "Alphabetical" && { letter: (param.letter ?? "a").toLowerCase() },
+      ...param.order === "Most Popular" && param.timeRange && param.timeRange !== "monthly" && {
+        timeRange: PornstarPopularPeriodMapping[param.timeRange]
+      },
+      ...param.order === "Most Viewed" && param.timeRange && param.timeRange !== "alltime" && {
+        timeRange: PornstarViewedPeriodMapping[param.timeRange]
+      },
+      ...page !== 1 && { page }
+    });
   }
 };
-var WebmasterBaseUrl = urlcat(BASE_URL, "/webmasters");
+var WebmasterBaseUrl = (0, import_urlcat.default)(BASE_URL, "/webmasters");
 var WebmasterRoute = {
   isVideoActive(id) {
-    return urlcat(WebmasterBaseUrl, "/is_video_active", { id });
+    return (0, import_urlcat.default)(WebmasterBaseUrl, "/is_video_active", { id });
   },
   categories() {
-    return urlcat(WebmasterBaseUrl, "/categories");
+    return (0, import_urlcat.default)(WebmasterBaseUrl, "/categories");
   },
   deletedVideos(page) {
-    return urlcat(WebmasterBaseUrl, "/deleted_videos", { page });
+    return (0, import_urlcat.default)(WebmasterBaseUrl, "/deleted_videos", { page });
   },
   video_embed_code(id) {
-    return urlcat(WebmasterBaseUrl, "/video_embed_code", { id });
+    return (0, import_urlcat.default)(WebmasterBaseUrl, "/video_embed_code", { id });
   },
   stars_detailed() {
-    return urlcat(WebmasterBaseUrl, "/stars_detailed");
+    return (0, import_urlcat.default)(WebmasterBaseUrl, "/stars_detailed");
   },
   stars() {
-    return urlcat(WebmasterBaseUrl, "/stars");
+    return (0, import_urlcat.default)(WebmasterBaseUrl, "/stars");
   },
   tags(letter) {
-    return urlcat(WebmasterBaseUrl, "/tags", { list: letter });
+    return (0, import_urlcat.default)(WebmasterBaseUrl, "/tags", { list: letter });
   },
   video_by_id(id, thumbsize) {
-    return urlcat(WebmasterBaseUrl, "/video_by_id", { id, thumbsize });
+    return (0, import_urlcat.default)(WebmasterBaseUrl, "/video_by_id", { id, thumbsize });
   },
   search(keyword, options = {}) {
     var _a, _b, _c;
@@ -252,7 +319,7 @@ var WebmasterRoute = {
       "stars[]": (_b = options.stars) == null ? void 0 : _b.join(","),
       "category": (_c = options.category) == null ? void 0 : _c.join(",")
     };
-    return urlcat(WebmasterBaseUrl, "/search", query);
+    return (0, import_urlcat.default)(WebmasterBaseUrl, "/search", query);
   }
 };
 
@@ -971,7 +1038,6 @@ function parseResult($) {
 
 // src/scrapers/search/pornstar.ts
 var import_urlcat2 = __toESM(require("urlcat"));
-var urlcat2 = import_urlcat2.default.default ?? import_urlcat2.default;
 async function pornstarSearch(engine, keyword, options) {
   const url = Route.pornstarSearch(keyword, options);
   const html = await engine.request.raw(url);
@@ -990,7 +1056,7 @@ function parseResult2($) {
     const img = item.find("img");
     return {
       name: item.find(".title").text(),
-      url: urlcat2(BASE_URL, path),
+      url: (0, import_urlcat2.default)(BASE_URL, path),
       views: item.find(".pstarViews").text().replace("views", "").trim() || "0",
       videoNum: parseInt(item.find(".videosNumber").text()) || 0,
       rank: parseInt(item.find(".rank_number").text()) || 0,
@@ -1007,7 +1073,6 @@ var import_urlcat3 = __toESM(require("urlcat"));
 var removeProtectionBracket = (str) => str.replace(/\(.+?\)/g, "");
 
 // src/scrapers/search/gif.ts
-var urlcat3 = import_urlcat3.default.default ?? import_urlcat3.default;
 async function gifSearch(engine, keyword, options) {
   const url = Route.gifSearch(keyword, options);
   const html = await engine.request.raw(url);
@@ -1019,7 +1084,7 @@ async function gifSearch(engine, keyword, options) {
   };
 }
 function parseResult3($) {
-  const list = $("ul.gifLink li.gifVideoBlock ");
+  const list = $("ul.gifLink li.gifVideoBlock");
   const result = list.map((_, el) => {
     const item = $(el);
     const video = item.find("video");
@@ -1027,7 +1092,7 @@ function parseResult3($) {
     const path = getAttribute(item.find("a"), "href", "");
     return {
       title: item.find(".title").text(),
-      url: urlcat3(BASE_URL, path),
+      url: (0, import_urlcat3.default)(BASE_URL, path),
       mp4: getDataAttribute(video, "mp4", ""),
       webm: getDataAttribute(video, "webm", ""),
       preview: removeProtectionBracket(poster)
@@ -1038,7 +1103,6 @@ function parseResult3($) {
 
 // src/scrapers/search/video.ts
 var import_urlcat4 = __toESM(require("urlcat"));
-var urlcat4 = import_urlcat4.default.default ?? import_urlcat4.default;
 async function videoSearch(engine, keyword, options) {
   const url = Route.videoSearch(keyword, options);
   const html = await engine.request.raw(url);
@@ -1060,7 +1124,7 @@ function parseResult4($) {
     const preview = getAttribute(img, "src", "");
     return {
       title,
-      url: urlcat4(BASE_URL, path),
+      url: (0, import_urlcat4.default)(BASE_URL, path),
       views: item.find(".videoDetailsBlock .views var").text(),
       duration: item.find(".duration").text(),
       hd: !!item.find(".hd-thumbnail").length,
@@ -1557,6 +1621,45 @@ function parseInfo2($) {
   };
 }
 
+// src/scrapers/search/pornstars.ts
+var import_urlcat5 = __toESM(require("urlcat"));
+async function pornstarList(engine, options) {
+  const url = Route.pornstarList(options);
+  const html = await engine.request.raw(url);
+  const $ = getCheerio(html);
+  return {
+    data: parseResult5($),
+    paging: parsePaging($)
+  };
+}
+function parseResult5($) {
+  const list = $("#popularPornstars li.performerCard");
+  const result = list.map((_, el) => {
+    const item = $(el);
+    const name = item.find(".performerCardName").text().trim();
+    const path = getAttribute(item.find("a.title"), "href", "");
+    const url = (0, import_urlcat5.default)(BASE_URL, path);
+    const views = item.find(".viewsNumber").text().replace("Views", "").trim() || "0";
+    const videoNum = parseInt(item.find(".videosNumber").text().replace("Videos", "")) || 0;
+    const rank = parseInt(item.find(".rank_number").text()) || 0;
+    const img = item.find("img");
+    const photo = getDataAttribute(img, "thumb_url", "");
+    const verified = item.find(".verifiedPornstar").length > 0;
+    const awarded = item.find(".trophyPornStar").length > 0;
+    return {
+      name,
+      url,
+      views,
+      videoNum,
+      rank,
+      photo,
+      verified,
+      awarded
+    };
+  }).get();
+  return result;
+}
+
 // src/index.ts
 var PornHub = class {
   constructor(customFetch) {
@@ -1688,6 +1791,12 @@ var PornHub = class {
   searchVideo(keyword, options = {}) {
     return videoSearch(this.engine, keyword, options);
   }
+  /**
+   * Get pornstar list.
+   */
+  pornstarList(options = {}) {
+    return pornstarList(this.engine, options);
+  }
 };
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
@@ -1696,7 +1805,10 @@ var PornHub = class {
   HttpStatusError,
   IllegalError,
   PornHub,
+  PornstarListOrderingMapping,
   PornstarOrderingMapping,
+  PornstarPopularPeriodMapping,
+  PornstarViewedPeriodMapping,
   VideoOrderingMapping
 });
 //# sourceMappingURL=index.js.map
