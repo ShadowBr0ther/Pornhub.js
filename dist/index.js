@@ -1372,6 +1372,10 @@ function parseInfo($) {
   const taggedVideoCount = 0;
   const recentVideoCountEl = $(".mostRecentPornstarVideos > .pornstarVideosCounter");
   uploadedVideoCount = parseVideoCount(recentVideoCountEl.text().trim());
+  if (uploadedVideoCount === 0) {
+    const uploadedVideoCountEl = $(".videoSection > .section_header > .subHeaderOverrite > .showingInfo");
+    uploadedVideoCount = parseVideoCount(uploadedVideoCountEl.text().trim());
+  }
   const socials = {
     website: getAttribute($("a:has(.officialSiteIcon)"), "href"),
     twitter: getAttribute($("a:has(.twitterIcon)"), "href"),

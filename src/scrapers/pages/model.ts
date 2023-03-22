@@ -317,6 +317,10 @@ function parseInfo($: CheerioAPI): ModelPage {
     const recentVideoCountEl = $('.mostRecentPornstarVideos > .pornstarVideosCounter')
     uploadedVideoCount = parseVideoCount(recentVideoCountEl.text().trim())
 
+    if (uploadedVideoCount === 0) {
+        const uploadedVideoCountEl = $('.videoSection > .section_header > .subHeaderOverrite > .showingInfo')
+        uploadedVideoCount = parseVideoCount(uploadedVideoCountEl.text().trim())
+    }
     const socials = {
         website: getAttribute<string>($('.socialList a:has(.officialSiteIcon)'), 'href'),
         twitter: getAttribute<string>($('.socialList a:has(.twitterIcon)'), 'href'),
