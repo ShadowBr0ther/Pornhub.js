@@ -309,15 +309,9 @@ function parseInfo($: CheerioAPI): ModelPage {
 
     let uploadedVideoCount = 0
     const taggedVideoCount = 0
-    if (verified) {
-        const recentVideoCountEl = $('.mostRecentPornstarVideos > .pornstarVideosCounter')
-        uploadedVideoCount = parseVideoCount(recentVideoCountEl.text().trim())
-
-        // looks like model page doesn't have tagged video count
-    }
-    else {
-        // there is no unverified model :D
-    }
+    
+    const recentVideoCountEl = $('.mostRecentPornstarVideos > .pornstarVideosCounter')
+    uploadedVideoCount = parseVideoCount(recentVideoCountEl.text().trim())
 
     const socials = {
         website: getAttribute<string>($('.socialList a:has(.officialSiteIcon)'), 'href'),

@@ -1323,11 +1323,8 @@ function parseInfo($) {
   }).filter((item) => item.name && item.url);
   let uploadedVideoCount = 0;
   const taggedVideoCount = 0;
-  if (verified) {
-    const recentVideoCountEl = $(".mostRecentPornstarVideos > .pornstarVideosCounter");
-    uploadedVideoCount = parseVideoCount(recentVideoCountEl.text().trim());
-  } else {
-  }
+  const recentVideoCountEl = $(".mostRecentPornstarVideos > .pornstarVideosCounter");
+  uploadedVideoCount = parseVideoCount(recentVideoCountEl.text().trim());
   const socials = {
     website: getAttribute($("a:has(.officialSiteIcon)"), "href"),
     twitter: getAttribute($("a:has(.twitterIcon)"), "href"),
