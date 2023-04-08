@@ -1255,9 +1255,7 @@ var KeyMapper = {
 var parseVideoCount = (text) => {
   if (!text)
     return 0;
-  console.log(text);
   const match = text.match(/Showing \d+-\d+ of (\d+)/);
-  console.log(match);
   if (match)
     return parseReadableNumber(match[1]);
   return 0;
