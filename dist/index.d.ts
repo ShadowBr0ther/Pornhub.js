@@ -148,11 +148,11 @@ interface VideoDetail {
     default_thumb: string;
     thumb: string;
     publish_date: string;
-    thumbs: {
+    thumbs: Array<{
         width: string;
         height: string;
         src: string;
-    }[];
+    }>;
     tags: string[];
     pornstars: string[];
     categories: string[];
@@ -170,21 +170,21 @@ interface VideoResponse {
     default_thumb: string;
     thumb: string;
     publish_date: string;
-    thumbs: {
+    thumbs: Array<{
         size: string;
         width: string;
         height: string;
         src: string;
-    }[];
-    tags: {
+    }>;
+    tags: Array<{
         tag_name: string;
-    }[];
-    pornstars: {
+    }>;
+    pornstars: Array<{
         pornstar_name: string;
-    }[];
-    categories: {
+    }>;
+    categories: Array<{
         category: string;
-    }[];
+    }>;
     segment: Segment;
 }
 
@@ -257,10 +257,10 @@ interface ModelPage {
     premium: boolean;
     subscribers: number;
     videosFrontpage: string[];
-    featuredIn: {
+    featuredIn: Array<{
         name: string;
         url: string;
-    }[];
+    }>;
     uploadedVideoCount: number;
     taggedVideoCount: number;
     gender?: string;
@@ -310,10 +310,10 @@ interface PornstarPage {
     awarded: boolean;
     premium: boolean;
     subscribers: number;
-    featuredIn: {
+    featuredIn: Array<{
         name: string;
         url: string;
-    }[];
+    }>;
     uploadedVideoCount: number;
     taggedVideoCount: number;
     gender?: string;
@@ -370,12 +370,12 @@ interface PhotoPage {
 }
 
 interface AlbumPage {
-    photos: {
+    photos: Array<{
         url: string;
         views: string;
         rating: string;
         preview: string;
-    }[];
+    }>;
     provider: {
         id: string;
         username: string;
@@ -396,12 +396,15 @@ interface VideoPage {
     };
     premium: boolean;
     thumb: string;
-    videos: {
+    /**
+     * @deprecated We no longer support video download. Use alternative tools such as `yt-dlp` instead.
+     */
+    videos: Array<{
         url: string;
         quality: string;
         filename: string;
         extension: string;
-    }[];
+    }>;
     provider: {
         username: string;
         url: string;
@@ -455,9 +458,9 @@ interface WebmasterStar {
 }
 
 interface WebmasterStarsDetailed {
-    stars: {
+    stars: Array<{
         star: DetailedStar;
-    }[];
+    }>;
 }
 interface DetailedStar {
     star_name: string;

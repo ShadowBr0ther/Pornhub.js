@@ -46,22 +46,6 @@ module.exports = __toCommonJS(src_exports);
 // src/apis/route.ts
 var import_urlcat = __toESM(require("urlcat"));
 
-// src/utils/constant.ts
-var BASE_URL = "https://www.pornhub.com";
-
-// src/utils/string.ts
-function searchify(keyword) {
-  return keyword.replace(/[^a-zA-Z0-9\s]/g, " ").trim().split(/\s+/).join("+");
-}
-function dashify(keywords) {
-  if (!Array.isArray(keywords))
-    return keywords.trim();
-  return keywords.map((keyword) => keyword.trim()).filter((keyword) => keyword.length > 0).sort((a, b) => a.localeCompare(b)).join("-");
-}
-function slugify(keyword) {
-  return keyword.replace(/[^a-zA-Z0-9\s]/g, " ").trim().split(/\s+/).join("-");
-}
-
 // src/types/SearchOrdering.ts
 var VideoOrderingMapping = {
   "Most Relevant": "",
@@ -110,6 +94,22 @@ var PornstarViewedPeriodMapping = {
   monthly: "m",
   alltime: ""
 };
+
+// src/utils/constant.ts
+var BASE_URL = "https://www.pornhub.com";
+
+// src/utils/string.ts
+function searchify(keyword) {
+  return keyword.replace(/[^a-zA-Z0-9\s]/g, " ").trim().split(/\s+/).join("+");
+}
+function dashify(keywords) {
+  if (!Array.isArray(keywords))
+    return keywords.trim();
+  return keywords.map((keyword) => keyword.trim()).filter((keyword) => keyword.length > 0).sort((a, b) => a.localeCompare(b)).join("-");
+}
+function slugify(keyword) {
+  return keyword.replace(/[^a-zA-Z0-9\s]/g, " ").trim().split(/\s+/).join("-");
+}
 
 // src/apis/route.ts
 var Route = {
@@ -405,9 +405,46 @@ async function logout(engine) {
   }
 }
 
+// src/apis/getToken.ts
+async function getToken2(engine) {
+  const html = await getMainPage(engine);
+  const $ = getCheerio(html);
+  const inputEl = $('form#search_form input[name="search"]');
+  const token = getDataAttribute(inputEl, "token", null);
+  if (!token)
+    throw new Error("Failed to get token");
+  return token;
+}
+
+// src/apis/autoComplete.ts
+async function getAutoComplete(engine, keyword, options) {
+  var _a, _b, _c;
+  const token = options.token ?? await getToken2(engine);
+  const result = await engine.request.get(Route.autocomplete(keyword, {
+    ...options,
+    token
+  }));
+  return {
+    ...result,
+    models: ((_a = result.models) == null ? void 0 : _a.map((item) => ({
+      ...item,
+      url: Route.modelPage(item.slug)
+    })).sort((a, b) => a.rank - b.rank)) ?? [],
+    pornstars: ((_b = result.pornstars) == null ? void 0 : _b.map((item) => ({
+      ...item,
+      url: Route.pornstarPage(item.slug)
+    })).sort((a, b) => a.rank - b.rank)) ?? [],
+    channels: ((_c = result.channels) == null ? void 0 : _c.map((item) => ({
+      ...item,
+      url: Route.channelPage(item.slug)
+    })).sort((a, b) => +a.rank - +b.rank)) ?? []
+  };
+}
+
 // src/core/request.ts
 var import_url = require("url");
 var import_debug = __toESM(require("debug"));
+var import_node_fetch = __toESM(require("node-fetch"));
 
 // src/utils/error.ts
 var HttpStatusError = class extends Error {
@@ -416,7 +453,6 @@ var IllegalError = class extends Error {
 };
 
 // src/core/request.ts
-var import_node_fetch = __toESM(require("node-fetch"));
 var debug = (0, import_debug.default)("request");
 var Request = class {
   constructor(customFetch) {
@@ -858,51 +894,6 @@ function parseTag($) {
   return $list.map((_, el) => $(el).text().trim()).get();
 }
 
-// src/scrapers/pages/photo.ts
-async function photoPage(engine, urlOrId) {
-  const id = UrlParser.getPhotoID(urlOrId);
-  const url = Route.photoPage(id);
-  const html = await engine.request.raw(url);
-  const $ = getCheerio(html);
-  return {
-    info: parsePhoto($),
-    provider: parseProvider2($),
-    tags: parseTag2($)
-  };
-}
-function parsePhoto($) {
-  var _a;
-  const photoWrapper = $("div#photoWrapper");
-  const $img = photoWrapper.find("img");
-  const title = $img.attr("alt") || "";
-  const url = $img.attr("src") || "";
-  const albumID = ((_a = photoWrapper.data("album-id")) == null ? void 0 : _a.toString()) || "";
-  const rating = `${photoWrapper.find("span#votePercentageNumber").text()}%` || "";
-  const viewsText = photoWrapper.find("section#photoInfoSection strong").text();
-  const views = parseInt(removeComma(viewsText)) || 0;
-  return {
-    title,
-    views,
-    rating,
-    albumID,
-    url
-  };
-}
-function parseProvider2($) {
-  const $user = $("div#userInformation div.usernameWrap");
-  const id = $user.data("userid");
-  const username = $user.find("a").text();
-  const url = $user.find("a").attr("href") || "";
-  return { id, username, url };
-}
-function parseTag2($) {
-  const $list = $("ul.tagList a.tagText");
-  return $list.map((idx) => $list.eq(idx).text()).get();
-}
-function removeComma(str) {
-  return str.replace(/,/g, "");
-}
-
 // src/utils/number.ts
 function parseReadableNumber(viewsText) {
   if (!viewsText)
@@ -917,265 +908,6 @@ function parseReadableNumber(viewsText) {
   } else {
     return parseFloat(views);
   }
-}
-
-// src/utils/time.ts
-function toHHMMSS(sec) {
-  const hours = Math.floor(sec / 3600);
-  const minutes = Math.floor(sec / 60) % 60;
-  const seconds = sec % 60;
-  return [hours, minutes, seconds].map((v) => v < 10 ? `0${v}` : v).filter((v, i) => v !== "00" || i > 0).join(":");
-}
-
-// src/scrapers/pages/video.ts
-async function videoPage(engine, urlOrId) {
-  const id = UrlParser.getVideoID(urlOrId);
-  const url = Route.videoPage(id);
-  const html = await engine.request.raw(url);
-  const $ = getCheerio(html);
-  return {
-    id,
-    ...parseByDom(html, $)
-  };
-}
-function parseByDom(html, $) {
-  var _a, _b, _c;
-  const voteUp = parseReadableNumber($("span.votesUp").text() || "0");
-  const voteDown = parseReadableNumber($("span.votesDown").text() || "0");
-  const title = $("head > title").first().text().replace(" - Pornhub.com", "");
-  const viewsText = $("span.count").text() || "0";
-  const views = parseReadableNumber(viewsText);
-  const vote = {
-    up: voteUp,
-    down: voteDown,
-    total: voteUp + voteDown,
-    rating: Math.round(voteUp / (voteUp + voteDown) * 100) / 100
-  };
-  const premium = $(".video-wrapper .ph-icon-badge-premium").length !== 0;
-  const thumb = getAttribute($(".thumbnail img"), "src", "");
-  const videos = parseVideo(html);
-  const providerLink = $(".usernameBadgesWrapper a.bolded").first();
-  const provider = providerLink.length ? { username: providerLink.text(), url: getAttribute(providerLink, "href", "") } : null;
-  const trafficJunkyMeta = $("head meta[name=adsbytrafficjunkycontext]");
-  const tags2 = ((_a = getDataAttribute(trafficJunkyMeta, "context-tag")) == null ? void 0 : _a.split(",")) || [];
-  const pornstars = ((_b = getDataAttribute(trafficJunkyMeta, "context-pornstar")) == null ? void 0 : _b.split(",")) || [];
-  const categories2 = ((_c = getDataAttribute(trafficJunkyMeta, "context-category")) == null ? void 0 : _c.split(",")) || [];
-  const durationMeta = $('head meta[property="video:duration"]');
-  const duration = +getAttribute(durationMeta, "content", 0);
-  const durationFormatted = toHHMMSS(duration);
-  return {
-    title,
-    views,
-    vote,
-    premium,
-    thumb,
-    videos,
-    provider,
-    tags: tags2,
-    pornstars,
-    categories: categories2,
-    duration,
-    durationFormatted
-  };
-}
-function parseVideo(_html) {
-  return [];
-}
-
-// src/scrapers/search/base.ts
-function parsePaging($) {
-  const current = parseInt($("li.page_current").text());
-  const nextPage = $("li.page_next");
-  const maxPage = nextPage.length ? parseInt($("li.page_next").prev("li").text()) : current;
-  return {
-    current,
-    maxPage,
-    isEnd: !nextPage.length
-  };
-}
-function parseCounting($) {
-  try {
-    const counterStr = $(".showingCounter").text();
-    const [, from = "0", to = "0", total = "0"] = /(\d+)-(\d+)\sof\s(\d+)/.exec(counterStr) || [];
-    return {
-      from: parseInt(from),
-      to: parseInt(to),
-      total: parseInt(total)
-    };
-  } catch (err) {
-    return {
-      from: 0,
-      to: 0,
-      total: 0
-    };
-  }
-}
-
-// src/scrapers/search/album.ts
-async function albumSearch(engine, keyword, options) {
-  const url = Route.albumSearch(keyword, options);
-  const html = await engine.request.raw(url);
-  const $ = getCheerio(html);
-  return {
-    data: parseResult($),
-    paging: parsePaging($),
-    counting: parseCounting($)
-  };
-}
-function parseResult($) {
-  const $list = $("ul#photosAlbumsSection li.photoAlbumListContainer div.photoAlbumListBlock");
-  const result = $list.map((_, el) => {
-    var _a;
-    const item = $(el);
-    const title = getAttribute(item, "title", "");
-    const url = `${BASE_URL}${item.find("a").attr("href")}`;
-    const rating = item.find(".album-photo-percentage").text();
-    const preview = getDataAttribute(item, "bkg") || ((_a = getAttribute(item, "style", "").match(/url\("(.+)"\)/)) == null ? void 0 : _a[1]) || "";
-    return { title, url, rating, preview };
-  }).get();
-  return result;
-}
-
-// src/scrapers/search/pornstar.ts
-var import_urlcat2 = __toESM(require("urlcat"));
-async function pornstarSearch(engine, keyword, options) {
-  const url = Route.pornstarSearch(keyword, options);
-  const html = await engine.request.raw(url);
-  const $ = getCheerio(html);
-  return {
-    data: parseResult2($),
-    paging: parsePaging($),
-    counting: parseCounting($)
-  };
-}
-function parseResult2($) {
-  const $list = $("ul#pornstarsSearchResult li div.wrap");
-  const result = $list.map((_, el) => {
-    const item = $(el);
-    const path = getAttribute(item.find("a"), "href", "");
-    const img = item.find("img");
-    return {
-      name: item.find(".title").text(),
-      url: (0, import_urlcat2.default)(BASE_URL, path),
-      views: item.find(".pstarViews").text().replace("views", "").trim() || "0",
-      videoNum: parseInt(item.find(".videosNumber").text()) || 0,
-      rank: parseInt(item.find(".rank_number").text()) || 0,
-      photo: getDataAttribute(img, "thumb_url", "")
-    };
-  }).get();
-  return result;
-}
-
-// src/scrapers/search/gif.ts
-var import_urlcat3 = __toESM(require("urlcat"));
-
-// src/utils/utils.ts
-var removeProtectionBracket = (str) => str.replace(/\(.+?\)/g, "");
-
-// src/scrapers/search/gif.ts
-async function gifSearch(engine, keyword, options) {
-  const url = Route.gifSearch(keyword, options);
-  const html = await engine.request.raw(url);
-  const $ = getCheerio(html);
-  return {
-    data: parseResult3($),
-    paging: parsePaging($),
-    counting: parseCounting($)
-  };
-}
-function parseResult3($) {
-  const list = $("ul.gifLink li.gifVideoBlock");
-  const result = list.map((_, el) => {
-    const item = $(el);
-    const video = item.find("video");
-    const poster = getAttribute(video, "poster", "");
-    const path = getAttribute(item.find("a"), "href", "");
-    return {
-      title: item.find(".title").text(),
-      url: (0, import_urlcat3.default)(BASE_URL, path),
-      mp4: getDataAttribute(video, "mp4", ""),
-      webm: getDataAttribute(video, "webm", ""),
-      preview: removeProtectionBracket(poster)
-    };
-  }).get();
-  return result;
-}
-
-// src/scrapers/search/video.ts
-var import_urlcat4 = __toESM(require("urlcat"));
-async function videoSearch(engine, keyword, options) {
-  const url = Route.videoSearch(keyword, options);
-  const html = await engine.request.raw(url);
-  const $ = getCheerio(html);
-  return {
-    data: parseResult4($),
-    paging: parsePaging($),
-    counting: parseCounting($)
-  };
-}
-function parseResult4($) {
-  const list = $("#videoSearchResult li.videoBox");
-  const result = list.map((_, el) => {
-    const item = $(el);
-    const thumb = item.find(".linkVideoThumb").eq(0);
-    const title = getAttribute(thumb, "title", "");
-    const path = getAttribute(thumb, "href", "");
-    const img = item.find("img");
-    const preview = getAttribute(img, "src", "");
-    return {
-      title,
-      url: (0, import_urlcat4.default)(BASE_URL, path),
-      views: item.find(".videoDetailsBlock .views var").text(),
-      duration: item.find(".duration").text(),
-      hd: !!item.find(".hd-thumbnail").length,
-      premium: !!item.find(".premiumIcon").length,
-      freePremium: !!item.find(".marker-overlays .phpFreeBlock").length,
-      preview
-    };
-  }).get();
-  return result;
-}
-
-// src/apis/getToken.ts
-async function getToken2(engine) {
-  const html = await getMainPage(engine);
-  const $ = getCheerio(html);
-  const inputEl = $('form#search_form input[name="search"]');
-  const token = getDataAttribute(inputEl, "token", null);
-  if (!token)
-    throw new Error("Failed to get token");
-  return token;
-}
-
-// src/apis/autoComplete.ts
-async function getAutoComplete(engine, keyword, options) {
-  var _a, _b, _c;
-  const token = options.token ?? await getToken2(engine);
-  const result = await engine.request.get(Route.autocomplete(keyword, {
-    ...options,
-    token
-  }));
-  return {
-    ...result,
-    models: ((_a = result.models) == null ? void 0 : _a.map((item) => ({
-      ...item,
-      url: Route.modelPage(item.slug)
-    })).sort((a, b) => a.rank - b.rank)) ?? [],
-    pornstars: ((_b = result.pornstars) == null ? void 0 : _b.map((item) => ({
-      ...item,
-      url: Route.pornstarPage(item.slug)
-    })).sort((a, b) => a.rank - b.rank)) ?? [],
-    channels: ((_c = result.channels) == null ? void 0 : _c.map((item) => ({
-      ...item,
-      url: Route.channelPage(item.slug)
-    })).sort((a, b) => +a.rank - +b.rank)) ?? []
-  };
-}
-
-// src/scrapers/search/model.ts
-async function modelSearch(engine, keyword, options = {}) {
-  const result = await getAutoComplete(engine, keyword, options);
-  return result.models;
 }
 
 // src/scrapers/pages/model.ts
@@ -1403,6 +1135,51 @@ function parseInfo($) {
   };
 }
 
+// src/scrapers/pages/photo.ts
+async function photoPage(engine, urlOrId) {
+  const id = UrlParser.getPhotoID(urlOrId);
+  const url = Route.photoPage(id);
+  const html = await engine.request.raw(url);
+  const $ = getCheerio(html);
+  return {
+    info: parsePhoto($),
+    provider: parseProvider2($),
+    tags: parseTag2($)
+  };
+}
+function parsePhoto($) {
+  var _a;
+  const photoWrapper = $("div#photoWrapper");
+  const $img = photoWrapper.find("img");
+  const title = $img.attr("alt") || "";
+  const url = $img.attr("src") || "";
+  const albumID = ((_a = photoWrapper.data("album-id")) == null ? void 0 : _a.toString()) || "";
+  const rating = `${photoWrapper.find("span#votePercentageNumber").text()}%` || "";
+  const viewsText = photoWrapper.find("section#photoInfoSection strong").text();
+  const views = parseInt(removeComma(viewsText)) || 0;
+  return {
+    title,
+    views,
+    rating,
+    albumID,
+    url
+  };
+}
+function parseProvider2($) {
+  const $user = $("div#userInformation div.usernameWrap");
+  const id = $user.data("userid");
+  const username = $user.find("a").text();
+  const url = $user.find("a").attr("href") || "";
+  return { id, username, url };
+}
+function parseTag2($) {
+  const $list = $("ul.tagList a.tagText");
+  return $list.map((idx) => $list.eq(idx).text()).get();
+}
+function removeComma(str) {
+  return str.replace(/,/g, "");
+}
+
 // src/scrapers/pages/pornstar.ts
 var defaultMapper2 = (value) => value;
 var yesNoMapper2 = (value) => value === "Yes";
@@ -1622,24 +1399,208 @@ function parseInfo2($) {
   };
 }
 
+// src/utils/time.ts
+function toHHMMSS(sec) {
+  const hours = Math.floor(sec / 3600);
+  const minutes = Math.floor(sec / 60) % 60;
+  const seconds = sec % 60;
+  return [hours, minutes, seconds].map((v) => v < 10 ? `0${v}` : v).filter((v, i) => v !== "00" || i > 0).join(":");
+}
+
+// src/scrapers/pages/video.ts
+async function videoPage(engine, urlOrId) {
+  const id = UrlParser.getVideoID(urlOrId);
+  const url = Route.videoPage(id);
+  const html = await engine.request.raw(url);
+  const $ = getCheerio(html);
+  return {
+    id,
+    ...parseByDom(html, $)
+  };
+}
+function parseByDom(html, $) {
+  var _a, _b, _c;
+  const voteUp = parseReadableNumber($("span.votesUp").text() || "0");
+  const voteDown = parseReadableNumber($("span.votesDown").text() || "0");
+  const title = $("head > title").first().text().replace(" - Pornhub.com", "");
+  const viewsText = $("span.count").text() || "0";
+  const views = parseReadableNumber(viewsText);
+  const vote = {
+    up: voteUp,
+    down: voteDown,
+    total: voteUp + voteDown,
+    rating: Math.round(voteUp / (voteUp + voteDown) * 100) / 100
+  };
+  const premium = $(".video-wrapper .ph-icon-badge-premium").length !== 0;
+  const thumb = getAttribute($(".thumbnail img"), "src", "");
+  const providerLink = $(".usernameBadgesWrapper a.bolded").first();
+  const provider = providerLink.length ? { username: providerLink.text(), url: getAttribute(providerLink, "href", "") } : null;
+  const trafficJunkyMeta = $("head meta[name=adsbytrafficjunkycontext]");
+  const tags2 = ((_a = getDataAttribute(trafficJunkyMeta, "context-tag")) == null ? void 0 : _a.split(",")) || [];
+  const pornstars = ((_b = getDataAttribute(trafficJunkyMeta, "context-pornstar")) == null ? void 0 : _b.split(",")) || [];
+  const categories2 = ((_c = getDataAttribute(trafficJunkyMeta, "context-category")) == null ? void 0 : _c.split(",")) || [];
+  const durationMeta = $('head meta[property="video:duration"]');
+  const duration = +getAttribute(durationMeta, "content", 0);
+  const durationFormatted = toHHMMSS(duration);
+  return {
+    title,
+    views,
+    vote,
+    premium,
+    thumb,
+    videos: [],
+    provider,
+    tags: tags2,
+    pornstars,
+    categories: categories2,
+    duration,
+    durationFormatted
+  };
+}
+
+// src/scrapers/search/base.ts
+function parsePaging($) {
+  const current = parseInt($("li.page_current").text());
+  const nextPage = $("li.page_next");
+  const maxPage = nextPage.length ? parseInt($("li.page_next").prev("li").text()) : current;
+  return {
+    current,
+    maxPage,
+    isEnd: !nextPage.length
+  };
+}
+function parseCounting($) {
+  try {
+    const counterStr = $(".showingCounter").text();
+    const [, from = "0", to = "0", total = "0"] = /(\d+)-(\d+)\sof\s(\d+)/.exec(counterStr) || [];
+    return {
+      from: parseInt(from),
+      to: parseInt(to),
+      total: parseInt(total)
+    };
+  } catch (err) {
+    return {
+      from: 0,
+      to: 0,
+      total: 0
+    };
+  }
+}
+
+// src/scrapers/search/album.ts
+async function albumSearch(engine, keyword, options) {
+  const url = Route.albumSearch(keyword, options);
+  const html = await engine.request.raw(url);
+  const $ = getCheerio(html);
+  return {
+    data: parseResult($),
+    paging: parsePaging($),
+    counting: parseCounting($)
+  };
+}
+function parseResult($) {
+  const $list = $("ul#photosAlbumsSection li.photoAlbumListContainer div.photoAlbumListBlock");
+  const result = $list.map((_, el) => {
+    var _a;
+    const item = $(el);
+    const title = getAttribute(item, "title", "");
+    const url = `${BASE_URL}${item.find("a").attr("href")}`;
+    const rating = item.find(".album-photo-percentage").text();
+    const preview = getDataAttribute(item, "bkg") || ((_a = getAttribute(item, "style", "").match(/url\("(.+)"\)/)) == null ? void 0 : _a[1]) || "";
+    return { title, url, rating, preview };
+  }).get();
+  return result;
+}
+
+// src/scrapers/search/gif.ts
+var import_urlcat2 = __toESM(require("urlcat"));
+
+// src/utils/utils.ts
+var removeProtectionBracket = (str) => str.replace(/\(.+?\)/g, "");
+
+// src/scrapers/search/gif.ts
+async function gifSearch(engine, keyword, options) {
+  const url = Route.gifSearch(keyword, options);
+  const html = await engine.request.raw(url);
+  const $ = getCheerio(html);
+  return {
+    data: parseResult2($),
+    paging: parsePaging($),
+    counting: parseCounting($)
+  };
+}
+function parseResult2($) {
+  const list = $("ul.gifLink li.gifVideoBlock");
+  const result = list.map((_, el) => {
+    const item = $(el);
+    const video = item.find("video");
+    const poster = getAttribute(video, "poster", "");
+    const path = getAttribute(item.find("a"), "href", "");
+    return {
+      title: item.find(".title").text(),
+      url: (0, import_urlcat2.default)(BASE_URL, path),
+      mp4: getDataAttribute(video, "mp4", ""),
+      webm: getDataAttribute(video, "webm", ""),
+      preview: removeProtectionBracket(poster)
+    };
+  }).get();
+  return result;
+}
+
+// src/scrapers/search/model.ts
+async function modelSearch(engine, keyword, options = {}) {
+  const result = await getAutoComplete(engine, keyword, options);
+  return result.models;
+}
+
+// src/scrapers/search/pornstar.ts
+var import_urlcat3 = __toESM(require("urlcat"));
+async function pornstarSearch(engine, keyword, options) {
+  const url = Route.pornstarSearch(keyword, options);
+  const html = await engine.request.raw(url);
+  const $ = getCheerio(html);
+  return {
+    data: parseResult3($),
+    paging: parsePaging($),
+    counting: parseCounting($)
+  };
+}
+function parseResult3($) {
+  const $list = $("ul#pornstarsSearchResult li div.wrap");
+  const result = $list.map((_, el) => {
+    const item = $(el);
+    const path = getAttribute(item.find("a"), "href", "");
+    const img = item.find("img");
+    return {
+      name: item.find(".title").text(),
+      url: (0, import_urlcat3.default)(BASE_URL, path),
+      views: item.find(".pstarViews").text().replace("views", "").trim() || "0",
+      videoNum: parseInt(item.find(".videosNumber").text()) || 0,
+      rank: parseInt(item.find(".rank_number").text()) || 0,
+      photo: getDataAttribute(img, "thumb_url", "")
+    };
+  }).get();
+  return result;
+}
+
 // src/scrapers/search/pornstars.ts
-var import_urlcat5 = __toESM(require("urlcat"));
+var import_urlcat4 = __toESM(require("urlcat"));
 async function pornstarList(engine, options) {
   const url = Route.pornstarList(options);
   const html = await engine.request.raw(url);
   const $ = getCheerio(html);
   return {
-    data: parseResult5($),
+    data: parseResult4($),
     paging: parsePaging($)
   };
 }
-function parseResult5($) {
+function parseResult4($) {
   const list = $("#popularPornstars li.performerCard");
   const result = list.map((_, el) => {
     const item = $(el);
     const name = item.find(".performerCardName").text().trim();
     const path = getAttribute(item.find("a.title"), "href", "");
-    const url = (0, import_urlcat5.default)(BASE_URL, path);
+    const url = (0, import_urlcat4.default)(BASE_URL, path);
     const views = item.find(".viewsNumber").text().replace("Views", "").trim() || "0";
     const videoNum = parseInt(item.find(".videosNumber").text().replace("Videos", "")) || 0;
     const rank = parseInt(item.find(".rank_number").text()) || 0;
@@ -1656,6 +1617,41 @@ function parseResult5($) {
       photo,
       verified,
       awarded
+    };
+  }).get();
+  return result;
+}
+
+// src/scrapers/search/video.ts
+var import_urlcat5 = __toESM(require("urlcat"));
+async function videoSearch(engine, keyword, options) {
+  const url = Route.videoSearch(keyword, options);
+  const html = await engine.request.raw(url);
+  const $ = getCheerio(html);
+  return {
+    data: parseResult5($),
+    paging: parsePaging($),
+    counting: parseCounting($)
+  };
+}
+function parseResult5($) {
+  const list = $("#videoSearchResult li.videoBox");
+  const result = list.map((_, el) => {
+    const item = $(el);
+    const thumb = item.find(".linkVideoThumb").eq(0);
+    const title = getAttribute(thumb, "title", "");
+    const path = getAttribute(thumb, "href", "");
+    const img = item.find("img");
+    const preview = getAttribute(img, "src", "");
+    return {
+      title,
+      url: (0, import_urlcat5.default)(BASE_URL, path),
+      views: item.find(".videoDetailsBlock .views var").text(),
+      duration: item.find(".duration").text(),
+      hd: !!item.find(".hd-thumbnail").length,
+      premium: !!item.find(".premiumIcon").length,
+      freePremium: !!item.find(".marker-overlays .phpFreeBlock").length,
+      preview
     };
   }).get();
   return result;
