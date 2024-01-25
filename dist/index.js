@@ -39,7 +39,10 @@ __export(src_exports, {
   PornstarOrderingMapping: () => PornstarOrderingMapping,
   PornstarPopularPeriodMapping: () => PornstarPopularPeriodMapping,
   PornstarViewedPeriodMapping: () => PornstarViewedPeriodMapping,
-  VideoOrderingMapping: () => VideoOrderingMapping
+  RecommendedOrderingMapping: () => RecommendedOrderingMapping,
+  VideoListOrderingMapping: () => VideoListOrderingMapping,
+  VideoOrderingMapping: () => VideoOrderingMapping,
+  VideoSearchPeriodMapping: () => VideoSearchPeriodMapping
 });
 module.exports = __toCommonJS(src_exports);
 
@@ -72,6 +75,14 @@ var PornstarOrderingMapping = {
   "Most Viewed": "mv",
   "No. of Video": "nv"
 };
+var VideoListOrderingMapping = {
+  "Featured Recently": "",
+  "Most Viewed": "mv",
+  "Top Rated": "tr",
+  "Hottest": "ht",
+  "Longest": "lg",
+  "Newest": "cm"
+};
 var PornstarListOrderingMapping = {
   "Most Popular": "",
   "Most Viewed": "mv",
@@ -80,6 +91,10 @@ var PornstarListOrderingMapping = {
   "Alphabetical": "a",
   "No. of Videos": "nv",
   "Random": "r"
+};
+var RecommendedOrderingMapping = {
+  "Most Relevant": "",
+  "Most Recent": "time"
 };
 
 // src/types/SearchPeriod.ts
@@ -94,13 +109,66 @@ var PornstarViewedPeriodMapping = {
   monthly: "m",
   alltime: ""
 };
+var VideoSearchPeriodMapping = {
+  daily: "t",
+  weekly: "w",
+  monthly: "m",
+  yearly: "y",
+  alltime: ""
+};
+
+// src/types/Country.ts
+var CountryMapping = {
+  "Argentina": "ar",
+  "Australia": "au",
+  "Austria": "at",
+  "Belgium": "be",
+  "Brazil": "br",
+  "Bulgaria": "bg",
+  "Canada": "ca",
+  "Chile": "cl",
+  "Croatia": "hr",
+  "Czech Republic": "cz",
+  "Denmark": "dk",
+  "Egypt": "eg",
+  "Finland": "fi",
+  "France": "fr",
+  "Germany": "de",
+  "Greece": "gr",
+  "Hungary": "hu",
+  "India": "in",
+  "Ireland": "ie",
+  "Israel": "il",
+  "Italy": "it",
+  "Japan": "jp",
+  "Korea": "kr",
+  "Mexico": "mx",
+  "Morocco": "ma",
+  "Netherlands": "nl",
+  "New Zealand": "nz",
+  "Norway": "no",
+  "Pakistan": "pk",
+  "Poland": "pl",
+  "Portugal": "pt",
+  "Romania": "ro",
+  "Russia": "ru",
+  "Serbia": "rs",
+  "Slovakia": "sk",
+  "Spain": "es",
+  "Sweden": "se",
+  "Switzerland": "ch",
+  "United Kingdom": "gb",
+  "Ukraine": "ua",
+  "United States": "us",
+  "World": "world"
+};
 
 // src/utils/constant.ts
 var BASE_URL = "https://www.pornhub.com";
 
 // src/utils/string.ts
 function searchify(keyword) {
-  return keyword.replace(/[^a-zA-Z0-9\s]/g, " ").trim().split(/\s+/).join("+");
+  return keyword.replace(/^[ \t]+|[ \t]+$/gi, "").replace(/[\.,'/:=\(\)&!\?@\[\]"\*\$#%\^;\|`\\~><¿\{\}\+]/gi, " ").replace(/[éèëê]/gi, "e").replace(/[äàâ]/gi, "a").replace(/[üùû]/gi, "u").replace(/[îï]/gi, "i").replace(/ô/gi, "o").replace(/ç/gi, "c").replace(/【/gi, "").replace(/】/gi, "").replace(/〈/gi, "").replace(/〉/gi, "").replace(/〖/gi, "").replace(/〗/gi, "").replace(/（/gi, "").replace(/）/gi, "").replace(/　/gi, "").replace(/〔/gi, "").replace(/〕/gi, "").replace(/『/gi, "").replace(/』/gi, "").replace(/］/gi, "").replace(/［/gi, "").trim().split(/\s+/).join("+");
 }
 function dashify(keywords) {
   if (!Array.isArray(keywords))
@@ -113,8 +181,11 @@ function slugify(keyword) {
 
 // src/apis/route.ts
 var Route = {
+  /**
+   * @url https://www.pornhub.com/
+   */
   mainPage() {
-    return BASE_URL;
+    return `${BASE_URL}/`;
   },
   /**
    * @url https://www.pornhub.com/front/authenticate
@@ -143,26 +214,69 @@ var Route = {
       alt: 0
     });
   },
+  /**
+   * @url https://www.pornhub.com/album/7529441
+   */
   albumPage(id) {
     return (0, import_urlcat.default)(BASE_URL, "/album/:id", { id });
   },
+  /**
+   * @url https://www.pornhub.com/photo/833578021
+   */
   photoPage(id) {
     return (0, import_urlcat.default)(BASE_URL, "/photo/:id", { id });
   },
   videoPage(id) {
     return (0, import_urlcat.default)(BASE_URL, "/view_video.php", { viewkey: id });
   },
+  /**
+   * @url https://www.pornhub.com/pornstar/eva-elfie
+   */
   pornstarPage(name) {
     return (0, import_urlcat.default)(BASE_URL, "/pornstar/:name", { name });
   },
+  /**
+   * @url https://www.pornhub.com/model/luna-okko
+   */
   modelPage(name) {
     return (0, import_urlcat.default)(BASE_URL, "/model/:name", { name });
   },
   modelPageWithVideos(name) {
     return (0, import_urlcat.default)(BASE_URL, "/model/:name/videos", { name });
   },
+  /**
+   * @url https://www.pornhub.com/model/luna-okko/videos
+   */
+  modelVideosPage(name, page) {
+    return (0, import_urlcat.default)(BASE_URL, "/model/:name/videos", { name, page });
+  },
+  /**
+   * @url https://www.pornhub.com/channels/brazzers
+   */
   channelPage(name) {
     return (0, import_urlcat.default)(BASE_URL, "/channels/:name", { name });
+  },
+  /**
+   * @url https://www.pornhub.com/random
+   */
+  randomPage() {
+    return (0, import_urlcat.default)(BASE_URL, "/random");
+  },
+  /**
+   * @url https://www.pornhub.com/recommended
+   */
+  recommendedPage({
+    order = "Most Relevant",
+    page = 1,
+    sexualOrientation = "straight"
+  }) {
+    const orientation = sexualOrientation === "straight" ? void 0 : sexualOrientation;
+    const pathTemplate = orientation ? "/:orientation/recommended" : "/recommended";
+    return (0, import_urlcat.default)(BASE_URL, pathTemplate, {
+      orientation,
+      ...order !== "Most Relevant" && { o: RecommendedOrderingMapping[order] },
+      ...page !== 1 && { page }
+    });
   },
   /**
    * @url https://www.pornhub.com/albums/female-straight-uncategorized?search=random
@@ -177,7 +291,7 @@ var Route = {
     return (0, import_urlcat.default)(BASE_URL, "/albums/:segment", {
       segment: dashify(segments),
       search: searchify(keyword),
-      page,
+      ...page !== 1 && { page },
       ...o && { o },
       ...verified && { verified: "1" }
     });
@@ -191,9 +305,10 @@ var Route = {
     sexualOrientation = "straight"
   }) {
     const o = GifOrderingMapping[order];
-    const pathTemplate = sexualOrientation === "straight" ? "/gifs/search" : "/:sexualOrientation/gifs/search";
+    const orientation = sexualOrientation === "straight" ? void 0 : sexualOrientation;
+    const pathTemplate = orientation ? "/:orientation/gifs/search" : "/gifs/search";
     return (0, import_urlcat.default)(BASE_URL, pathTemplate, {
-      ...sexualOrientation !== "straight" && { sexualOrientation },
+      orientation,
       search: searchify(keyword),
       ...page !== 1 && { page },
       ...o && { o }
@@ -204,10 +319,14 @@ var Route = {
    */
   pornstarSearch(keyword, {
     page = 1,
-    order = "Most Relevant"
+    order = "Most Relevant",
+    sexualOrientation = "straight"
   }) {
     const o = PornstarOrderingMapping[order];
-    return (0, import_urlcat.default)(BASE_URL, "/pornstars/search", {
+    const orientation = sexualOrientation === "straight" ? void 0 : sexualOrientation;
+    const pathTemplate = orientation ? "/:orientation/pornstars/search" : "/pornstars/search";
+    return (0, import_urlcat.default)(BASE_URL, pathTemplate, {
+      orientation,
       search: searchify(keyword),
       ...page !== 1 && { page },
       ...o && { o }
@@ -216,17 +335,22 @@ var Route = {
   /**
    * @url https://www.pornhub.com/video/search?search=random
    */
-  videoSearch(keyword, {
-    page = 1,
-    order = "Most Relevant",
-    hd = false,
-    production = "all",
-    durationMin,
-    durationMax,
-    filterCategory
-  }) {
+  videoSearch(keyword, param) {
+    const {
+      page = 1,
+      order = "Most Relevant",
+      hd = false,
+      production = "all",
+      durationMin,
+      durationMax,
+      filterCategory,
+      sexualOrientation = "straight"
+    } = param;
     const o = VideoOrderingMapping[order];
-    return (0, import_urlcat.default)(BASE_URL, "/video/search", {
+    const orientation = sexualOrientation === "straight" ? void 0 : sexualOrientation;
+    const pathTemplate = orientation ? "/:orientation/video/search" : "/video/search";
+    return (0, import_urlcat.default)(BASE_URL, pathTemplate, {
+      orientation,
       search: searchify(keyword),
       ...page !== 1 && { page },
       ...o && { o },
@@ -234,7 +358,36 @@ var Route = {
       ...production !== "all" && { p: production },
       ...durationMin && { min_duration: durationMin },
       ...durationMax && { max_duration: durationMax },
-      ...filterCategory && { filter_category: filterCategory }
+      ...filterCategory && { filter_category: filterCategory },
+      ...(param.order === "Most Viewed" || param.order === "Top Rated") && param.period && param.period !== "alltime" && { t: VideoSearchPeriodMapping[param.period] }
+    });
+  },
+  /**
+   * @url https://www.pornhub.com/video
+   */
+  videoList(param) {
+    const {
+      page = 1,
+      order = "Featured Recently",
+      hd = false,
+      production = "all",
+      durationMin,
+      durationMax,
+      filterCategory,
+      sexualOrientation = "straight"
+    } = param;
+    const pathTemplate = sexualOrientation === "transgender" ? "transgender" : sexualOrientation === "gay" ? "/gayporn" : "/video";
+    const o = VideoListOrderingMapping[order];
+    return (0, import_urlcat.default)(BASE_URL, pathTemplate, {
+      ...filterCategory && { c: filterCategory },
+      ...production !== "all" && { p: production },
+      ...o && { o },
+      ...(param.order === "Most Viewed" || param.order === "Top Rated") && param.period && param.period !== "alltime" && { t: VideoSearchPeriodMapping[param.period] },
+      ...param.order === "Hottest" && param.country && param.country !== "World" && { cc: CountryMapping[param.country] },
+      ...durationMin && { min_duration: durationMin },
+      ...durationMax && { max_duration: durationMax },
+      ...hd && { hd: "1" },
+      ...page !== 1 && { page }
     });
   },
   /**
@@ -325,7 +478,9 @@ var WebmasterRoute = {
 
 // src/apis/getMainPage.ts
 async function getMainPage(engine) {
-  const html = await engine.request.raw(Route.mainPage());
+  const url = Route.mainPage();
+  const res = await engine.request.get(url);
+  const html = await res.text();
   return html;
 }
 
@@ -374,7 +529,7 @@ async function getToken(engine) {
     return await Promise.reject(err);
   }
 }
-function sendLoginForm(engine, account, password, token, redirect) {
+async function sendLoginForm(engine, account, password, token, redirect) {
   const data = {
     redirect,
     token,
@@ -384,7 +539,9 @@ function sendLoginForm(engine, account, password, token, redirect) {
     password,
     setSendTip: false
   };
-  return engine.request.postForm(Route.authenticate(), data);
+  const res = await engine.request.postForm(Route.authenticate(), data);
+  const result = await res.json();
+  return result;
 }
 
 // src/apis/logout.ts
@@ -420,10 +577,11 @@ async function getToken2(engine) {
 async function getAutoComplete(engine, keyword, options) {
   var _a, _b, _c;
   const token = options.token ?? await getToken2(engine);
-  const result = await engine.request.get(Route.autocomplete(keyword, {
+  const res = await engine.request.get(Route.autocomplete(keyword, {
     ...options,
     token
   }));
+  const result = await res.json();
   return {
     ...result,
     models: ((_a = result.models) == null ? void 0 : _a.map((item) => ({
@@ -441,9 +599,46 @@ async function getAutoComplete(engine, keyword, options) {
   };
 }
 
-// src/core/request.ts
-var import_url = require("url");
+// src/core/dumper.ts
+var import_node_fs = __toESM(require("fs"));
+var import_node_path = __toESM(require("path"));
+var import_node_process = __toESM(require("process"));
 var import_debug = __toESM(require("debug"));
+var debug = (0, import_debug.default)("DUMP");
+var Dumper = class {
+  constructor(request) {
+    this.request = request;
+  }
+  enable(_dumpPagePath) {
+    const dumpPagePath = _dumpPagePath ? import_node_path.default.resolve(_dumpPagePath) : import_node_path.default.join(import_node_process.default.cwd(), "_dump");
+    if (!import_node_fs.default.existsSync(dumpPagePath)) {
+      import_node_fs.default.mkdirSync(dumpPagePath, { recursive: true });
+    }
+    this.request.eventEmitter.on("responseHTML", ({ url, html }) => {
+      const normalizedPath = this.getNormalizedUrlPath(url);
+      const filename = `${normalizedPath}.html`;
+      const filePath = import_node_path.default.join(dumpPagePath, filename);
+      debug(filePath);
+      import_node_fs.default.writeFileSync(filePath, html);
+    });
+    this.request.eventEmitter.on("responseJSON", ({ url, json }) => {
+      const normalizedPath = this.getNormalizedUrlPath(url);
+      const filename = `${normalizedPath}.json`;
+      const filePath = import_node_path.default.join(dumpPagePath, filename);
+      debug(filePath);
+      import_node_fs.default.writeFileSync(filePath, JSON.stringify(json, null, 4));
+    });
+  }
+  getNormalizedUrlPath(url) {
+    const now = Date.now();
+    const path2 = url.pathname.replace(/\/$/, "").replace(/\//g, "_") || "index";
+    return `${now}_${path2}`;
+  }
+};
+
+// src/core/request.ts
+var import_node_url = require("url");
+var import_debug2 = __toESM(require("debug"));
 var import_node_fetch = __toESM(require("node-fetch"));
 
 // src/utils/error.ts
@@ -452,28 +647,136 @@ var HttpStatusError = class extends Error {
 var IllegalError = class extends Error {
 };
 
+// src/core/eventEmitter.ts
+function mitt(all) {
+  all = all || /* @__PURE__ */ new Map();
+  return {
+    /**
+     * A Map of event names to registered handler functions.
+     */
+    all,
+    /**
+     * Check whether an event handler of the given type exists.
+     * @param {string|symbol} type of event to check
+     * @memberOf mitt
+     */
+    has(type) {
+      return all.has(type);
+    },
+    /**
+     * Register an event handler for the given type.
+     * @param {string|symbol} type Type of event to listen for, or `'*'` for all events
+     * @param {Function} handler Function to call in response to given event
+     * @memberOf mitt
+     */
+    on(type, handler) {
+      const handlers = all.get(type);
+      if (handlers) {
+        handlers.push(handler);
+      } else {
+        all.set(type, [handler]);
+      }
+    },
+    /**
+     * Remove an event handler for the given type.
+     * If `handler` is omitted, all handlers of the given type are removed.
+     * @param {string|symbol} type Type of event to unregister `handler` from (`'*'` to remove a wildcard handler)
+     * @param {Function} [handler] Handler function to remove
+     * @memberOf mitt
+     */
+    off(type, handler) {
+      const handlers = all.get(type);
+      if (handlers) {
+        if (handler) {
+          handlers.splice(handlers.indexOf(handler) >>> 0, 1);
+        } else {
+          all.set(type, []);
+        }
+      }
+    },
+    /**
+     * Invoke all handlers for the given type.
+     * If present, `'*'` handlers are invoked after type-matched handlers.
+     *
+     * Note: Manually firing '*' handlers is not supported.
+     *
+     * @param {string|symbol} type The event type to invoke
+     * @param {Any} [evt] Any value (object is recommended and powerful), passed to each handler
+     * @memberOf mitt
+     */
+    emit(type, evt) {
+      let handlers = all.get(type);
+      if (handlers) {
+        handlers.slice().forEach((handler) => {
+          handler(evt);
+        });
+      }
+      handlers = all.get("*");
+      if (handlers) {
+        handlers.slice().forEach((handler) => {
+          handler(type, evt);
+        });
+      }
+    }
+  };
+}
+
 // src/core/request.ts
-var debug = (0, import_debug.default)("request");
+var debug2 = (0, import_debug2.default)("REQUEST");
+var nonExpireDate = new Date(9999, 1, 1);
 var Request = class {
   constructor(customFetch) {
     this.customFetch = customFetch;
   }
   _agent;
   _headers = {};
-  _cookie = /* @__PURE__ */ new Map();
+  _cookieStore = /* @__PURE__ */ new Map();
+  eventEmitter = mitt();
   setAgent(agent) {
     this._agent = agent;
   }
   setHeader(key, value) {
+    if (key !== "Cookie")
+      debug2(`[Header] Set: ${key}=${value}`);
     this._headers[key] = value;
   }
-  get cookie() {
-    return Array.from(this._cookie).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("; ");
+  _checkCookieExpired() {
+    const now = Date.now();
+    this._cookieStore.forEach((cookie, key) => {
+      if (cookie.expires.getTime() < now) {
+        debug2(`[Cookie] Expired: ${key}`);
+        this._cookieStore.delete(key);
+      }
+    });
+  }
+  get cookieString() {
+    this._checkCookieExpired();
+    return Array.from(this._cookieStore).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v.value)}`).join("; ");
+  }
+  getCookies() {
+    this._checkCookieExpired();
+    return [...this._cookieStore].reduce((acc, [k, v]) => {
+      acc[k] = v.value;
+      return acc;
+    }, {});
+  }
+  getCookie(key) {
+    var _a;
+    this._checkCookieExpired();
+    return (_a = this._cookieStore.get(key)) == null ? void 0 : _a.value;
   }
   setCookie(key, value) {
-    this._cookie.set(key, value);
+    debug2(`[Cookie] Set: ${key}=${value}`);
+    this._cookieStore.set(key, {
+      value,
+      expires: nonExpireDate
+    });
   }
-  async checkStatus(res) {
+  deleteCookie(key) {
+    debug2(`[Cookie] Del: ${key}`);
+    this._cookieStore.delete(key);
+  }
+  async _checkStatus(res) {
     if (res.ok)
       return res;
     if (res.status === 404) {
@@ -490,72 +793,117 @@ var Request = class {
         }
       }
     }
-    return Promise.reject(new HttpStatusError(`${res.status} ${res.statusText}`));
+    return Promise.reject(new HttpStatusError(`${res.status} ${res.statusText} at ${res.url}`));
   }
-  parseCookieItem(str) {
-    if (str.includes(";"))
-      str = str.split(";")[0];
-    return str.split("=");
+  _parseCookieItem(str) {
+    const [first, ...rest] = str.split(";").map((item) => item.trim());
+    const [key, value] = first.split("=");
+    const restAttrs = rest.reduce((acc, item) => {
+      const [k, v] = item.split("=");
+      acc[k.toLowerCase()] = v;
+      return acc;
+    }, {});
+    let expires = nonExpireDate;
+    if (restAttrs["max-age"])
+      expires = new Date(Date.now() + Number(restAttrs["max-age"]) * 1e3);
+    else if (restAttrs.expires)
+      expires = new Date(restAttrs.expires);
+    return [key, { value, expires }];
   }
-  handleSetCookie(res) {
+  _handleSetCookie(res) {
     if (!res.headers.raw()["set-cookie"])
       return res;
     res.headers.raw()["set-cookie"].forEach((item) => {
-      const [key, value] = this.parseCookieItem(item);
-      this._cookie.set(key, value);
+      debug2(`[Cookie] Received Set-Cookie: ${item}`);
+      const [key, cookie] = this._parseCookieItem(item);
+      this._cookieStore.set(key, cookie);
     });
-    this.setHeader("Cookie", this.cookie);
     return res;
   }
   toJson(res) {
     const contentType = res.headers.get("content-type") || "";
     return contentType.includes("json") ? res.json() : res.text();
   }
-  buildParams(data) {
-    const params = new import_url.URLSearchParams();
+  _buildParams(data) {
+    const params = new import_node_url.URLSearchParams();
     Object.keys(data).forEach((key) => {
       params.append(key, data[key]);
     });
     return params;
   }
-  buildRequest(method, url, data) {
-    const opts = {};
-    const headers = Object.assign({}, this._headers);
-    if (method === "get")
-      opts.method = "get";
+  _buildRequest(method, url, data) {
+    const headers = {};
+    const opts = { method, headers };
     if (method === "post") {
       headers["Content-Type"] = "application/json";
-      opts.method = "post";
       opts.body = JSON.stringify(data);
     }
     if (method === "post-form") {
       opts.method = "post";
       if (data)
-        opts.body = this.buildParams(data);
+        opts.body = this._buildParams(data);
     }
-    headers && (opts.headers = headers);
-    this._agent && (opts.agent = this._agent);
+    return this.fetch(url, opts);
+  }
+  async _handleListener(method, response) {
+    if (method !== "GET")
+      return;
+    const url = new URL(response.url);
+    const contentType = response.headers.get("content-type") || "";
+    if (this.eventEmitter.has("responseHTML")) {
+      if (contentType.includes("application/json")) {
+        const copiedRes = response.clone();
+        const json = await copiedRes.json();
+        this.eventEmitter.emit("responseJSON", { url, json });
+      }
+    }
+    if (this.eventEmitter.has("responseJSON")) {
+      if (contentType.includes("text/html")) {
+        const copiedRes = response.clone();
+        const html = await copiedRes.text();
+        this.eventEmitter.emit("responseHTML", { url, html });
+      }
+    }
+  }
+  async fetch(url, opts = {}) {
+    var _a;
+    const headers = Object.assign({}, this._headers, opts.headers, {
+      cookie: this.cookieString
+    });
+    const method = ((_a = opts.method) == null ? void 0 : _a.toUpperCase()) || "GET";
+    debug2(`[ RQST ] ${method} ${url}`);
+    let res;
     if (this.customFetch) {
-      debug(`Custom fetch: ${url}`);
-      return this.customFetch(url, opts).then((res) => this.checkStatus(res)).then((res) => this.handleSetCookie(res)).then((res) => this.toJson(res)).catch((err) => Promise.reject(err));
+      debug2(`Custom fetch: ${url}`);
+      res = await this.customFetch(url, {
+        ...opts,
+        headers,
+        ...this._agent && { agent: this._agent }
+      });
+    } else {
+      res = await (0, import_node_fetch.default)(url, {
+        ...opts,
+        headers,
+        ...this._agent && { agent: this._agent }
+      });
     }
-    return (0, import_node_fetch.default)(url, opts).then((res) => this.checkStatus(res)).then((res) => this.handleSetCookie(res)).then((res) => this.toJson(res)).catch((err) => Promise.reject(err));
+    debug2(`[ RESP ] ${method} ${url} ${res.status} ${res.statusText}`);
+    if (res.url !== url) {
+      debug2(`Redirected from ${url} to ${res.url}`);
+    }
+    this._handleListener(method, res);
+    await this._checkStatus(res);
+    this._handleSetCookie(res);
+    return res;
   }
   get(url) {
-    debug(`GET ${url}`);
-    return this.buildRequest("get", url);
+    return this._buildRequest("get", url);
   }
   post(url, data) {
-    debug(`POST ${url}`);
-    return this.buildRequest("post", url, data);
+    return this._buildRequest("post", url, data);
   }
   postForm(url, data) {
-    debug(`POST ${url}`);
-    return this.buildRequest("post-form", url, data);
-  }
-  raw(url) {
-    debug(`GET ${url}`);
-    return this.buildRequest("get", url);
+    return this._buildRequest("post-form", url, data);
   }
 };
 
@@ -564,14 +912,23 @@ var Engine = class {
   constructor(customFetch) {
     this.customFetch = customFetch;
     this.request = new Request(this.customFetch);
+    this.dumper = new Dumper(this.request);
     this.request.setHeader("Host", this.BASE_URL.replace("https://", ""));
     this.request.setHeader("Origin", this.BASE_URL);
     this.request.setHeader("Referer", `${this.BASE_URL}/`);
-    this.request.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36");
+    this.request.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36");
     this.request.setCookie("platform", "pc");
+    this.request.setCookie("accessAgeDisclaimerPH", "1");
+    this.request.setCookie("accessAgeDisclaimerUK", "1");
+    this.request.setCookie("accessPH", "1");
+    this.request.setCookie("age_verified", "1");
+    this.request.setCookie("atatusScript", "hide");
+    this.request.setCookie("cookiesBannerSeen", "1");
+    this.request.setCookie("hasVisited", "1");
   }
   BASE_URL = BASE_URL;
   request;
+  dumper;
   // Flag to indicate whether the engine has visited the main page to get the cookies.
   // See issue: https://github.com/pionxzh/Pornhub.js/issues/27
   warmedUp = false;
@@ -580,7 +937,8 @@ var Engine = class {
 // src/apis/webmaster/categories.ts
 async function categories(engine) {
   try {
-    const result = await engine.request.get(WebmasterRoute.categories());
+    const res = await engine.request.get(WebmasterRoute.categories());
+    const result = await res.json();
     return result.categories.sort((a, b) => +a.id - +b.id);
   } catch (err) {
     console.error(err);
@@ -591,7 +949,8 @@ async function categories(engine) {
 // src/apis/webmaster/deleted.ts
 async function deleted(engine, page) {
   try {
-    const result = await engine.request.get(WebmasterRoute.deletedVideos(page));
+    const res = await engine.request.get(WebmasterRoute.deletedVideos(page));
+    const result = await res.json();
     return result.videos;
   } catch (err) {
     console.error(err);
@@ -643,7 +1002,8 @@ var UrlParser = class {
 async function video_embed_code(engine, urlOrId) {
   try {
     const id = UrlParser.getVideoID(urlOrId);
-    const result = await engine.request.get(WebmasterRoute.video_embed_code(id));
+    const res = await engine.request.get(WebmasterRoute.video_embed_code(id));
+    const result = await res.json();
     if ("code" in result)
       throw new Error(result.message);
     return result.embed.code.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"');
@@ -700,7 +1060,8 @@ function videoTransform(response) {
 // src/apis/webmaster/search.ts
 async function search(engine, keyword, options) {
   try {
-    const result = await engine.request.get(WebmasterRoute.search(keyword, options));
+    const res = await engine.request.get(WebmasterRoute.search(keyword, options));
+    const result = await res.json();
     return result.videos.map((x) => videoTransform(x));
   } catch (err) {
     console.error(err);
@@ -711,7 +1072,8 @@ async function search(engine, keyword, options) {
 // src/apis/webmaster/stars.ts
 async function stars(engine) {
   try {
-    const result = await engine.request.get(WebmasterRoute.stars());
+    const res = await engine.request.get(WebmasterRoute.stars());
+    const result = await res.json();
     return result.stars.map((x) => x.star.star_name);
   } catch (err) {
     console.error(err);
@@ -722,7 +1084,8 @@ async function stars(engine) {
 // src/apis/webmaster/stars_detailed.ts
 async function stars_detailed(engine) {
   try {
-    const result = await engine.request.get(WebmasterRoute.stars_detailed());
+    const res = await engine.request.get(WebmasterRoute.stars_detailed());
+    const result = await res.json();
     return result.stars.map((x) => x.star);
   } catch (err) {
     console.error(err);
@@ -733,7 +1096,8 @@ async function stars_detailed(engine) {
 // src/apis/webmaster/tags.ts
 async function tags(engine, letter) {
   try {
-    const result = await engine.request.get(WebmasterRoute.tags(letter));
+    const res = await engine.request.get(WebmasterRoute.tags(letter));
+    const result = await res.json();
     return result.tags;
   } catch (err) {
     console.error(err);
@@ -744,7 +1108,8 @@ async function tags(engine, letter) {
 // src/apis/webmaster/video_by_id.ts
 async function video_by_id(engine, urlOrId, thumbsize = "large") {
   const id = UrlParser.getVideoID(urlOrId);
-  const result = await engine.request.get(WebmasterRoute.video_by_id(id, thumbsize));
+  const res = await engine.request.get(WebmasterRoute.video_by_id(id, thumbsize));
+  const result = await res.json();
   return videoTransform(result.video);
 }
 
@@ -752,7 +1117,8 @@ async function video_by_id(engine, urlOrId, thumbsize = "large") {
 async function video_is_active(engine, urlOrId) {
   try {
     const id = UrlParser.getVideoID(urlOrId);
-    const result = await engine.request.get(WebmasterRoute.isVideoActive(id));
+    const res = await engine.request.get(WebmasterRoute.isVideoActive(id));
+    const result = await res.json();
     if ("code" in result)
       throw new Error(result.message);
     return result.active.is_active === "1";
@@ -772,7 +1138,7 @@ var WebMaster = class {
    * @url https://www.pornhub.com/webmasters/search?search=keyword
    * @example
    * const results = await pornhub.webMaster.search('keyword', { page: 2, period: 'weekly' })
-  */
+   */
   search(keyword, options = {}) {
     return search(this.engine, keyword, options);
   }
@@ -793,7 +1159,7 @@ var WebMaster = class {
    * @param urlOrId Video ID or page url
    * @example
    * const isActive = await pornhub.webMaster.isVideoActive('ph5a9634c9a827e')
-  */
+   */
   isVideoActive(urlOrId) {
     return video_is_active(this.engine, urlOrId);
   }
@@ -804,7 +1170,7 @@ var WebMaster = class {
    * @example
    * const code = await pornhub.webMaster.getVideoEmbedCode('ph5a9634c9a827e')
    * // <iframe src="https://www.pornhub.com/embed/xxxxxx" frameborder="0" width="560" height="340" scrolling="no" allowfullscreen></iframe>
-  */
+   */
   getVideoEmbedCode(urlOrId) {
     return video_embed_code(this.engine, urlOrId);
   }
@@ -814,7 +1180,7 @@ var WebMaster = class {
    * @param page Page number, default: 1
    * @example
    * const deletedVideos = await pornhub.webMaster.getDeletedVideos(2)
-  */
+   */
   getDeletedVideos(page = 1) {
     return deleted(this.engine, page);
   }
@@ -825,7 +1191,7 @@ var WebMaster = class {
    * @example
    * const tags = await pornhub.webMaster.getTags('s')
    * // ['solo', 'squirting', 'stockings', ...]
-  */
+   */
   getTags(letter = "a") {
     return tags(this.engine, letter);
   }
@@ -835,7 +1201,7 @@ var WebMaster = class {
    * @example
    * const categories = await pornhub.webMaster.getCategories()
    * // [{ id: "65", category: "threesome" }, { id: "105", category: "60fps" }]
-  */
+   */
   getCategories() {
     return categories(this.engine);
   }
@@ -844,7 +1210,7 @@ var WebMaster = class {
    * @url https://www.pornhub.com/webmasters/stars
    * @example
    * const pornstars = await pornhub.webMaster.getPornstars()
-  */
+   */
   getPornstars() {
     return stars(this.engine);
   }
@@ -852,19 +1218,145 @@ var WebMaster = class {
    * Get pornstar detail list
    * @url https://www.pornhub.com/webmasters/stars_detailed
    * const pornstars = await pornhub.webMaster.getPornstarsDetail()
-  */
+   */
   getPornstarsDetail() {
     return stars_detailed(this.engine);
   }
 };
 
+// src/scrapers/list/pornstars.ts
+var import_urlcat2 = __toESM(require("urlcat"));
+
+// src/scrapers/search/base.ts
+function parsePaging($) {
+  const current = Number.parseInt($("li.page_current").text()) || 1;
+  const nextPage = $("li.page_next");
+  const isEnd = !nextPage.length || nextPage.hasClass("disabled");
+  const maxPage = isEnd ? current : Number.parseInt(nextPage.prev("li").text()) || 1;
+  return {
+    current,
+    maxPage,
+    isEnd
+  };
+}
+function parseCounting($) {
+  try {
+    const counterStr = $(".showingCounter").text();
+    const [, from = "0", to = "0", total = "0"] = /(\d+)-(\d+)\sof\s(\d+)/.exec(counterStr) || [];
+    return {
+      from: Number.parseInt(from),
+      to: Number.parseInt(to),
+      total: Number.parseInt(total)
+    };
+  } catch (err) {
+    return {
+      from: 0,
+      to: 0,
+      total: 0
+    };
+  }
+}
+
+// src/scrapers/list/pornstars.ts
+async function pornstarList(engine, options) {
+  const url = Route.pornstarList(options);
+  const res = await engine.request.get(url);
+  const html = await res.text();
+  const $ = getCheerio(html);
+  return {
+    data: parseResult($),
+    paging: parsePaging($)
+  };
+}
+function parseResult($) {
+  const list = $("#popularPornstars li.performerCard");
+  const result = list.map((_, el) => {
+    const item = $(el);
+    const name = item.find(".performerCardName").text().trim();
+    const path2 = getAttribute(item.find("a.title"), "href", "");
+    const url = (0, import_urlcat2.default)(BASE_URL, path2);
+    const views = item.find(".viewsNumber").text().replace("Views", "").trim() || "0";
+    const videoNum = Number.parseInt(item.find(".videosNumber").text().replace("Videos", "")) || 0;
+    const rank = Number.parseInt(item.find(".rank_number").text()) || 0;
+    const img = item.find("img");
+    const photo = getDataAttribute(img, "thumb_url", "");
+    const verified = item.find(".verifiedPornstar").length > 0;
+    const awarded = item.find(".trophyPornStar").length > 0;
+    return {
+      name,
+      url,
+      views,
+      videoNum,
+      rank,
+      photo,
+      verified,
+      awarded
+    };
+  }).get();
+  return result;
+}
+
+// src/scrapers/search/video.ts
+var import_urlcat3 = __toESM(require("urlcat"));
+async function videoSearch(engine, keyword, options) {
+  const url = Route.videoSearch(keyword, options);
+  const res = await engine.request.get(url);
+  const html = await res.text();
+  const $ = getCheerio(html);
+  return {
+    data: parseVideoResult($, "#videoSearchResult"),
+    paging: parsePaging($),
+    counting: parseCounting($)
+  };
+}
+function parseVideoResult($, container) {
+  const list = $(`${container} li.videoBox`);
+  const result = list.map((_, el) => {
+    const item = $(el);
+    const thumb = item.find(".linkVideoThumb").eq(0);
+    const title = getAttribute(thumb, "title", "");
+    const path2 = getAttribute(thumb, "href", "");
+    const url = (0, import_urlcat3.default)(BASE_URL, path2);
+    const id = UrlParser.getVideoID(url);
+    const img = item.find("img");
+    const preview = getAttribute(img, "src", "");
+    return {
+      title,
+      id,
+      url,
+      views: item.find(".videoDetailsBlock .views var").text(),
+      duration: item.find(".duration").text(),
+      hd: !!item.find(".hd-thumbnail").length,
+      premium: !!item.find(".premiumIcon").length,
+      freePremium: !!item.find(".marker-overlays .phpFreeBlock").length,
+      preview
+    };
+  }).get();
+  return result;
+}
+
+// src/scrapers/list/videos.ts
+async function videoList(engine, options) {
+  const url = Route.videoList(options);
+  const res = await engine.request.get(url);
+  const html = await res.text();
+  const $ = getCheerio(html);
+  return {
+    data: parseVideoResult($, "#videoCategory"),
+    paging: parsePaging($),
+    counting: parseCounting($)
+  };
+}
+
 // src/scrapers/pages/album.ts
 async function albumPage(engine, urlOrId) {
   const id = UrlParser.getAlbumID(urlOrId);
   const url = Route.albumPage(id);
-  const html = await engine.request.raw(url);
+  const res = await engine.request.get(url);
+  const html = await res.text();
   const $ = getCheerio(html);
   return {
+    title: $("h1.photoAlbumTitleV2").text().trim(),
     photos: parsePhotos($),
     provider: parseProvider($),
     tags: parseTag($)
@@ -900,13 +1392,13 @@ function parseReadableNumber(viewsText) {
     return 0;
   const views = viewsText.replace(/,/g, "");
   if (views.includes("K")) {
-    return parseFloat(views) * 1e3;
+    return Number.parseFloat(views) * 1e3;
   } else if (views.includes("M")) {
-    return parseFloat(views) * 1e6;
+    return Number.parseFloat(views) * 1e6;
   } else if (views.includes("B")) {
-    return parseFloat(views) * 1e9;
+    return Number.parseFloat(views) * 1e9;
   } else {
-    return parseFloat(views);
+    return Number.parseFloat(views);
   }
 }
 
@@ -1042,7 +1534,8 @@ async function modelPage(engine, urlOrName) {
   if (!name)
     throw new Error(`Invalid model input: ${urlOrName}`);
   const url = Route.modelPage(name);
-  const html = await engine.request.raw(url);
+  const res = await engine.request.get(url);
+  const html = await res.text();
   const $ = getCheerio(html);
   return parseInfo($);
 }
@@ -1051,9 +1544,24 @@ async function modelVideoPage(engine, urlOrName, page) {
   if (!name)
     throw new Error(`Invalid model input: ${urlOrName}`);
   const url = Route.modelPageWithVideos(name) + `?page=${page}`;
-  const html = await engine.request.raw(url);
+  const res = await engine.request.get(url);
+  const html = await res.text();
   const $ = getCheerio(html);
   return parseInfo($);
+}
+async function modelUploadedVideos(engine, urlOrName, options) {
+  const name = UrlParser.getModelName(urlOrName);
+  if (!name)
+    throw new Error(`Invalid model input: ${urlOrName}`);
+  const url = Route.modelVideosPage(name, options.page ?? 1);
+  const res = await engine.request.get(url);
+  const html = await res.text();
+  const $ = getCheerio(html);
+  return {
+    data: parseVideoResult($, ".videoUList"),
+    paging: parsePaging($),
+    counting: parseCounting($)
+  };
 }
 function parseInfo($) {
   const infoPieces = $("div.infoPiece").toArray();
@@ -1107,13 +1615,14 @@ function parseInfo($) {
     uploadedVideoCount = parseVideoCount(uploadedVideoCountEl.text().trim());
   }
   const socials = {
-    website: getAttribute($("a:has(.officialSiteIcon)"), "href"),
-    twitter: getAttribute($("a:has(.twitterIcon)"), "href"),
-    instagram: getAttribute($("a:has(.instagramIcon)"), "href"),
-    snapchat: getAttribute($("a:has(.snapchatIcon)"), "href"),
-    modelhub: getAttribute($("a:has(.modelhubIcon)"), "href"),
-    amazonWishList: getAttribute($("a:has(.amazonWishlistIcon)"), "href") || getAttribute($("a:has(.amazonWLIcon)"), "href")
+    website: getAttribute($(".socialList a:has(.officialSiteIcon)"), "href"),
+    twitter: getAttribute($(".socialList a:has(.twitterIcon)"), "href"),
+    instagram: getAttribute($(".socialList a:has(.instagramIcon)"), "href"),
+    snapchat: getAttribute($(".socialList a:has(.snapchatIcon)"), "href"),
+    modelhub: getAttribute($(".socialList a:has(.modelhubIcon)"), "href"),
+    amazonWishList: getAttribute($(".socialList a:has(.amazonWishlistIcon)"), "href") || getAttribute($(".socialList a:has(.amazonWLIcon)"), "href")
   };
+  const mostRecentVideos = parseVideoResult($, ".mostRecentPornstarVideos");
   return {
     name,
     about,
@@ -1131,7 +1640,8 @@ function parseInfo($) {
     uploadedVideoCount,
     taggedVideoCount,
     ...info,
-    socials
+    socials,
+    mostRecentVideos
   };
 }
 
@@ -1139,7 +1649,8 @@ function parseInfo($) {
 async function photoPage(engine, urlOrId) {
   const id = UrlParser.getPhotoID(urlOrId);
   const url = Route.photoPage(id);
-  const html = await engine.request.raw(url);
+  const res = await engine.request.get(url);
+  const html = await res.text();
   const $ = getCheerio(html);
   return {
     info: parsePhoto($),
@@ -1156,7 +1667,7 @@ function parsePhoto($) {
   const albumID = ((_a = photoWrapper.data("album-id")) == null ? void 0 : _a.toString()) || "";
   const rating = `${photoWrapper.find("span#votePercentageNumber").text()}%` || "";
   const viewsText = photoWrapper.find("section#photoInfoSection strong").text();
-  const views = parseInt(removeComma(viewsText)) || 0;
+  const views = Number.parseInt(removeComma(viewsText)) || 0;
   return {
     title,
     views,
@@ -1316,7 +1827,8 @@ async function pornstarPage(engine, urlOrName) {
   if (!name)
     throw new Error(`Invalid pornstar input: ${urlOrName}`);
   const url = Route.pornstarPage(name);
-  const html = await engine.request.raw(url);
+  const res = await engine.request.get(url);
+  const html = await res.text();
   const $ = getCheerio(html);
   return parseInfo2($);
 }
@@ -1373,12 +1885,12 @@ function parseInfo2($) {
     }
   }
   const socials = {
-    website: getAttribute($("a:has(.officialSiteIcon)"), "href"),
-    twitter: getAttribute($("a:has(.twitterIcon)"), "href"),
-    instagram: getAttribute($("a:has(.instagramIcon)"), "href"),
-    snapchat: getAttribute($("a:has(.snapchatIcon)"), "href"),
-    modelhub: getAttribute($("a:has(.modelhubIcon)"), "href"),
-    amazonWishList: getAttribute($("a:has(.amazonWishlistIcon)"), "href") || getAttribute($("a:has(.amazonWLIcon)"), "href")
+    website: getAttribute($(".socialList a:has(.officialSiteIcon)"), "href"),
+    twitter: getAttribute($(".socialList a:has(.twitterIcon)"), "href"),
+    instagram: getAttribute($(".socialList a:has(.instagramIcon)"), "href"),
+    snapchat: getAttribute($(".socialList a:has(.snapchatIcon)"), "href"),
+    modelhub: getAttribute($(".socialList a:has(.modelhubIcon)"), "href"),
+    amazonWishList: getAttribute($(".socialList a:has(.amazonWishlistIcon)"), "href") || getAttribute($(".socialList a:has(.amazonWLIcon)"), "href")
   };
   return {
     name,
@@ -1411,10 +1923,13 @@ function toHHMMSS(sec) {
 async function videoPage(engine, urlOrId) {
   const id = UrlParser.getVideoID(urlOrId);
   const url = Route.videoPage(id);
-  const html = await engine.request.raw(url);
+  const res = await engine.request.get(url);
+  const html = await res.text();
   const $ = getCheerio(html);
   return {
     id,
+    url,
+    mediaDefinitions: parseMediaDefinition(html),
     ...parseByDom(html, $)
   };
 }
@@ -1425,14 +1940,16 @@ function parseByDom(html, $) {
   const title = $("head > title").first().text().replace(" - Pornhub.com", "");
   const viewsText = $("span.count").text() || "0";
   const views = parseReadableNumber(viewsText);
+  const totalVote = voteUp + voteDown;
   const vote = {
     up: voteUp,
     down: voteDown,
-    total: voteUp + voteDown,
-    rating: Math.round(voteUp / (voteUp + voteDown) * 100) / 100
+    total: totalVote,
+    rating: totalVote === 0 ? 0 : Math.round(voteUp / totalVote * 100) / 100
   };
-  const premium = $(".video-wrapper .ph-icon-badge-premium").length !== 0;
+  const premium = $("#videoTitle .ph-icon-badge-premium").length !== 0;
   const thumb = getAttribute($(".thumbnail img"), "src", "");
+  const preview = getAttribute($('head meta[property="og:image"]'), "content", "");
   const providerLink = $(".usernameBadgesWrapper a.bolded").first();
   const provider = providerLink.length ? { username: providerLink.text(), url: getAttribute(providerLink, "href", "") } : null;
   const trafficJunkyMeta = $("head meta[name=adsbytrafficjunkycontext]");
@@ -1448,57 +1965,99 @@ function parseByDom(html, $) {
     vote,
     premium,
     thumb,
+    preview,
     videos: [],
     provider,
     tags: tags2,
     pornstars,
     categories: categories2,
     duration,
-    durationFormatted
+    durationFormatted,
+    ...parseByLdJson($)
+  };
+}
+function parseByLdJson($) {
+  try {
+    const ldPlusJson = JSON.parse($('head script[type="application/ld+json"]').first().text());
+    const uploadDate = new Date(ldPlusJson.uploadDate);
+    return {
+      uploadDate
+    };
+  } catch (error) {
+    console.error("Failed to parse ld+json", error);
+    return {
+      uploadDate: /* @__PURE__ */ new Date(0)
+    };
+  }
+}
+var mediaDefinitionRegex = /{"defaultQuality":(true|false|\d+),"format":"(\w+)","videoUrl":"(.+?)","quality":(("\d+")|(\[[\d,]*\]))(,"remote":(true|false))?}/g;
+function parseMediaDefinition(html) {
+  const mediaDefinitions = [];
+  while (true) {
+    const match = mediaDefinitionRegex.exec(html);
+    if (!match)
+      break;
+    try {
+      const [, _defaultQuality, format, videoUrl, _quality, , _qualityArray, , , _remote] = match;
+      const defaultQuality = _defaultQuality === "true" ? true : _defaultQuality === "false" ? false : +_defaultQuality;
+      const quality = _qualityArray ? JSON.parse(_qualityArray) : +_quality;
+      const remote = _remote === "true";
+      mediaDefinitions.push({
+        defaultQuality,
+        format,
+        videoUrl,
+        quality,
+        remote
+      });
+    } catch (error) {
+      console.warn(`Failed to parse media definition from input: "${match}"`);
+      console.warn(error);
+    }
+  }
+  return mediaDefinitions;
+}
+
+// src/scrapers/pages/random.ts
+async function randomPage(engine) {
+  const url = Route.randomPage();
+  const response = await engine.request.fetch(url, { follow: 3 });
+  const redirectUrl = response.url;
+  const id = UrlParser.getVideoID(redirectUrl);
+  const html = await response.text();
+  const $ = getCheerio(html);
+  return {
+    id,
+    url: Route.videoPage(id),
+    mediaDefinitions: parseMediaDefinition(html),
+    ...parseByDom(html, $)
   };
 }
 
-// src/scrapers/search/base.ts
-function parsePaging($) {
-  const current = parseInt($("li.page_current").text());
-  const nextPage = $("li.page_next");
-  const maxPage = nextPage.length ? parseInt($("li.page_next").prev("li").text()) : current;
+// src/scrapers/pages/recommended.ts
+async function recommended(engine, options) {
+  const url = Route.recommendedPage(options);
+  const res = await engine.request.get(url);
+  const html = await res.text();
+  const $ = getCheerio(html);
   return {
-    current,
-    maxPage,
-    isEnd: !nextPage.length
+    data: parseVideoResult($, ".recommendedVideosContainer"),
+    paging: parsePaging($)
   };
-}
-function parseCounting($) {
-  try {
-    const counterStr = $(".showingCounter").text();
-    const [, from = "0", to = "0", total = "0"] = /(\d+)-(\d+)\sof\s(\d+)/.exec(counterStr) || [];
-    return {
-      from: parseInt(from),
-      to: parseInt(to),
-      total: parseInt(total)
-    };
-  } catch (err) {
-    return {
-      from: 0,
-      to: 0,
-      total: 0
-    };
-  }
 }
 
 // src/scrapers/search/album.ts
 async function albumSearch(engine, keyword, options) {
   const url = Route.albumSearch(keyword, options);
-  const html = await engine.request.raw(url);
+  const res = await engine.request.get(url);
+  const html = await res.text();
   const $ = getCheerio(html);
   return {
-    data: parseResult($),
+    data: parseResult2($),
     paging: parsePaging($),
     counting: parseCounting($)
   };
 }
-function parseResult($) {
+function parseResult2($) {
   const $list = $("ul#photosAlbumsSection li.photoAlbumListContainer div.photoAlbumListBlock");
   const result = $list.map((_, el) => {
     var _a;
@@ -1513,7 +2072,7 @@ function parseResult($) {
 }
 
 // src/scrapers/search/gif.ts
-var import_urlcat2 = __toESM(require("urlcat"));
+var import_urlcat4 = __toESM(require("urlcat"));
 
 // src/utils/utils.ts
 var removeProtectionBracket = (str) => str.replace(/\(.+?\)/g, "");
@@ -1521,24 +2080,25 @@ var removeProtectionBracket = (str) => str.replace(/\(.+?\)/g, "");
 // src/scrapers/search/gif.ts
 async function gifSearch(engine, keyword, options) {
   const url = Route.gifSearch(keyword, options);
-  const html = await engine.request.raw(url);
+  const res = await engine.request.get(url);
+  const html = await res.text();
   const $ = getCheerio(html);
   return {
-    data: parseResult2($),
+    data: parseResult3($),
     paging: parsePaging($),
     counting: parseCounting($)
   };
 }
-function parseResult2($) {
+function parseResult3($) {
   const list = $("ul.gifLink li.gifVideoBlock");
   const result = list.map((_, el) => {
     const item = $(el);
     const video = item.find("video");
     const poster = getAttribute(video, "poster", "");
-    const path = getAttribute(item.find("a"), "href", "");
+    const path2 = getAttribute(item.find("a"), "href", "");
     return {
       title: item.find(".title").text(),
-      url: (0, import_urlcat2.default)(BASE_URL, path),
+      url: (0, import_urlcat4.default)(BASE_URL, path2),
       mp4: getDataAttribute(video, "mp4", ""),
       webm: getDataAttribute(video, "webm", ""),
       preview: removeProtectionBracket(poster)
@@ -1554,104 +2114,31 @@ async function modelSearch(engine, keyword, options = {}) {
 }
 
 // src/scrapers/search/pornstar.ts
-var import_urlcat3 = __toESM(require("urlcat"));
+var import_urlcat5 = __toESM(require("urlcat"));
 async function pornstarSearch(engine, keyword, options) {
   const url = Route.pornstarSearch(keyword, options);
-  const html = await engine.request.raw(url);
-  const $ = getCheerio(html);
-  return {
-    data: parseResult3($),
-    paging: parsePaging($),
-    counting: parseCounting($)
-  };
-}
-function parseResult3($) {
-  const $list = $("ul#pornstarsSearchResult li div.wrap");
-  const result = $list.map((_, el) => {
-    const item = $(el);
-    const path = getAttribute(item.find("a"), "href", "");
-    const img = item.find("img");
-    return {
-      name: item.find(".title").text(),
-      url: (0, import_urlcat3.default)(BASE_URL, path),
-      views: item.find(".pstarViews").text().replace("views", "").trim() || "0",
-      videoNum: parseInt(item.find(".videosNumber").text()) || 0,
-      rank: parseInt(item.find(".rank_number").text()) || 0,
-      photo: getDataAttribute(img, "thumb_url", "")
-    };
-  }).get();
-  return result;
-}
-
-// src/scrapers/search/pornstars.ts
-var import_urlcat4 = __toESM(require("urlcat"));
-async function pornstarList(engine, options) {
-  const url = Route.pornstarList(options);
-  const html = await engine.request.raw(url);
+  const res = await engine.request.get(url);
+  const html = await res.text();
   const $ = getCheerio(html);
   return {
     data: parseResult4($),
-    paging: parsePaging($)
-  };
-}
-function parseResult4($) {
-  const list = $("#popularPornstars li.performerCard");
-  const result = list.map((_, el) => {
-    const item = $(el);
-    const name = item.find(".performerCardName").text().trim();
-    const path = getAttribute(item.find("a.title"), "href", "");
-    const url = (0, import_urlcat4.default)(BASE_URL, path);
-    const views = item.find(".viewsNumber").text().replace("Views", "").trim() || "0";
-    const videoNum = parseInt(item.find(".videosNumber").text().replace("Videos", "")) || 0;
-    const rank = parseInt(item.find(".rank_number").text()) || 0;
-    const img = item.find("img");
-    const photo = getDataAttribute(img, "thumb_url", "");
-    const verified = item.find(".verifiedPornstar").length > 0;
-    const awarded = item.find(".trophyPornStar").length > 0;
-    return {
-      name,
-      url,
-      views,
-      videoNum,
-      rank,
-      photo,
-      verified,
-      awarded
-    };
-  }).get();
-  return result;
-}
-
-// src/scrapers/search/video.ts
-var import_urlcat5 = __toESM(require("urlcat"));
-async function videoSearch(engine, keyword, options) {
-  const url = Route.videoSearch(keyword, options);
-  const html = await engine.request.raw(url);
-  const $ = getCheerio(html);
-  return {
-    data: parseResult5($),
     paging: parsePaging($),
     counting: parseCounting($)
   };
 }
-function parseResult5($) {
-  const list = $("#videoSearchResult li.videoBox");
-  const result = list.map((_, el) => {
+function parseResult4($) {
+  const $list = $("ul#pornstarsSearchResult li div.wrap");
+  const result = $list.map((_, el) => {
     const item = $(el);
-    const thumb = item.find(".linkVideoThumb").eq(0);
-    const title = getAttribute(thumb, "title", "");
-    const path = getAttribute(thumb, "href", "");
+    const path2 = getAttribute(item.find("a"), "href", "");
     const img = item.find("img");
-    const preview = getAttribute(img, "src", "");
     return {
-      title,
-      url: (0, import_urlcat5.default)(BASE_URL, path),
-      views: item.find(".videoDetailsBlock .views var").text(),
-      duration: item.find(".duration").text(),
-      hd: !!item.find(".hd-thumbnail").length,
-      premium: !!item.find(".premiumIcon").length,
-      freePremium: !!item.find(".marker-overlays .phpFreeBlock").length,
-      preview
+      name: item.find(".title").text(),
+      url: (0, import_urlcat5.default)(BASE_URL, path2),
+      views: item.find(".pstarViews").text().replace("views", "").trim() || "0",
+      videoNum: Number.parseInt(item.find(".videosNumber").text()) || 0,
+      rank: Number.parseInt(item.find(".rank_number").text()) || 0,
+      photo: getDataAttribute(img, "thumb_url", "")
     };
   }).get();
   return result;
@@ -1659,10 +2146,14 @@ function parseResult5($) {
 
 // src/index.ts
 var PornHub = class {
-  constructor(customFetch) {
+  constructor(customFetch, config = {}) {
     this.customFetch = customFetch;
     this.engine = new Engine(this.customFetch);
     this.webMaster = new WebMaster(this.engine);
+    if (config.dumpPage) {
+      const dumpPagePath = typeof config.dumpPage === "string" ? config.dumpPage : "";
+      this.engine.dumper.enable(dumpPagePath);
+    }
   }
   engine;
   webMaster;
@@ -1673,8 +2164,17 @@ var PornHub = class {
   setHeader(key, value) {
     this.engine.request.setHeader(key, value);
   }
+  getCookies() {
+    return this.engine.request.getCookies();
+  }
+  getCookie(key) {
+    return this.engine.request.getCookie(key);
+  }
   setCookie(key, value) {
     this.engine.request.setCookie(key, value);
+  }
+  deleteCookie(key) {
+    this.engine.request.deleteCookie(key);
   }
   /**
    * See: https://github.com/pionxzh/Pornhub.js/issues/27
@@ -1685,13 +2185,13 @@ var PornHub = class {
   }
   /**
    * Login with account and password.
-  */
+   */
   login(account, password) {
     return login(this.engine, account, password);
   }
   /**
    * Logout from Pornhub.com.
-  */
+   */
   logout() {
     return logout(this.engine);
   }
@@ -1701,7 +2201,7 @@ var PornHub = class {
    * You can cache this token to avoid frequent requests (I'm not sure about the expiration time!).
    *
    * For now, this token is only used for `autoComplete` and `searchModel`.
-   * This library will automatically get token if you don't provide it.
+   * This library will automatically get the token if you don't provide one.
    */
   getToken() {
     return getToken2(this.engine);
@@ -1709,7 +2209,7 @@ var PornHub = class {
   /**
    * Get video information by url/ID
    * @param urlOrId Video ID or page url
-  */
+   */
   async video(urlOrId) {
     if (!this.engine.warmedUp) {
       await getMainPage(this.engine);
@@ -1720,21 +2220,21 @@ var PornHub = class {
   /**
    * Get album information by url/ID
    * @param urlOrId Album ID or page url
-  */
+   */
   album(urlOrId) {
     return albumPage(this.engine, urlOrId);
   }
   /**
    * Get photo information by url/ID
    * @param urlOrId Photo ID or page url
-  */
+   */
   photo(urlOrId) {
     return photoPage(this.engine, urlOrId);
   }
   /**
    * Get pornstar information by url/ID
    * @param urlOrName Pornstar name or page url
-  */
+   */
   pornstar(urlOrName) {
     return pornstarPage(this.engine, urlOrName);
   }
@@ -1751,6 +2251,21 @@ var PornHub = class {
    */
   modelVideo(urlOrName, page = 1) {
     return modelVideoPage(this.engine, urlOrName, page);
+  }
+  /**
+   * Get list of model's uploaded videos
+   * @param urlOrName Model name or page url
+   * @param options Options including page number
+   */
+  modelVideos(urlOrName, options = {}) {
+    return modelUploadedVideos(this.engine, urlOrName, options);
+  }
+  /**
+   * Get a random video.
+   * @returns The same object as `video()`
+   */
+  randomVideo() {
+    return randomPage(this.engine);
   }
   /**
    * Get autocomplete result by keyword.
@@ -1789,10 +2304,22 @@ var PornHub = class {
     return videoSearch(this.engine, keyword, options);
   }
   /**
+   * Get video list.
+   */
+  videoList(options = {}) {
+    return videoList(this.engine, options);
+  }
+  /**
    * Get pornstar list.
    */
   pornstarList(options = {}) {
     return pornstarList(this.engine, options);
+  }
+  /**
+   * Get recommended videos.
+   */
+  recommendedVideos(options = {}) {
+    return recommended(this.engine, options);
   }
 };
 // Annotate the CommonJS export names for ESM import in node:
@@ -1806,6 +2333,9 @@ var PornHub = class {
   PornstarOrderingMapping,
   PornstarPopularPeriodMapping,
   PornstarViewedPeriodMapping,
-  VideoOrderingMapping
+  RecommendedOrderingMapping,
+  VideoListOrderingMapping,
+  VideoOrderingMapping,
+  VideoSearchPeriodMapping
 });
 //# sourceMappingURL=index.js.map

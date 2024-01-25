@@ -221,7 +221,8 @@ export async function modelVideoPage(engine: Engine, urlOrName: string, page: nu
 
 
     const url = Route.modelPageWithVideos(name)+`?page=${page}`
-    const html = await engine.request.raw(url)
+    const res = await engine.request.get(url)
+    const html = await res.text()
     const $ = getCheerio(html)
 
     return parseInfo($)
