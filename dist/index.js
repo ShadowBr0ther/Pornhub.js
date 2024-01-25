@@ -1255,10 +1255,10 @@ function parseInfo($) {
   const rank = parseReadableNumber(rankEl.text().trim());
   const weeklyRankEl = $("div.rankingInfo > div.infoBox.rankDetails > big");
   const weeklyRank = parseReadableNumber(weeklyRankEl.text().trim());
-  const linkEl = $("ul.videos > li.videoBox > div.wrap > div.phimage > a");
+  const linkEl = $("div.mostRecentPornstarVideos > ul.videos > li.videoBox > div.wrap > div.phimage > a");
   let videosFrontpage = [];
   linkEl.each((_, e) => {
-    videosFrontpage.push({ link: $(e).attr("href"), thumb: $(e).find("img").attr("src") });
+    videosFrontpage.push($(e).attr("href"));
   });
   const avatarEl = $("img#getAvatar, .topProfileHeader > .thumbImage > img");
   const avatar = getAttribute(avatarEl, "src", "");

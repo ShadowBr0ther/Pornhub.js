@@ -214,10 +214,7 @@ interface ModelPage {
     awarded: boolean;
     premium: boolean;
     subscribers: number;
-    videosFrontpage: {
-        link: string;
-        thumb: string;
-    }[];
+    videosFrontpage: string[];
     featuredIn: {
         name: string;
         url: string;
