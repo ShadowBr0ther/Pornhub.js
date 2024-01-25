@@ -252,7 +252,7 @@ function parseInfo($: CheerioAPI): ModelPage {
     const weeklyRank = parseReadableNumber(weeklyRankEl.text().trim())
 
     const linkEl = $('ul.videos > li.videoBox > div.wrap > div.phimage > a')
-    let videosFrontpage:  {link: string, thumb: string}[] = [];
+    let videosFrontpage:  {link: string, thumb: string}[] = []; 
     linkEl.each((_: any,e: any)=> {videosFrontpage.push({link:$(e).attr('href')!, thumb:$(e).find('img').attr('src')!})})
 
     const avatarEl = $('img#getAvatar, .topProfileHeader > .thumbImage > img')
