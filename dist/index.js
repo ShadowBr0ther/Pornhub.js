@@ -337,7 +337,6 @@ async function logout(engine) {
 
 // src/core/request.ts
 var import_url = require("url");
-var import_node_fetch = __toESM(require("node-fetch"));
 var import_debug = __toESM(require("debug"));
 
 // src/utils/error.ts
@@ -347,8 +346,12 @@ var IllegalError = class extends Error {
 };
 
 // src/core/request.ts
+var import_node_fetch = __toESM(require("node-fetch"));
 var debug = (0, import_debug.default)("request");
 var Request = class {
+  constructor(customFetch) {
+    this.customFetch = customFetch;
+  }
   _agent;
   _headers = {};
   _cookie = /* @__PURE__ */ new Map();
@@ -426,6 +429,10 @@ var Request = class {
     }
     headers && (opts.headers = headers);
     this._agent && (opts.agent = this._agent);
+    if (this.customFetch) {
+      debug(`Custom fetch: ${url}`);
+      return this.customFetch(url, opts).then((res) => this.checkStatus(res)).then((res) => this.handleSetCookie(res)).then((res) => this.toJson(res)).catch((err) => Promise.reject(err));
+    }
     return (0, import_node_fetch.default)(url, opts).then((res) => this.checkStatus(res)).then((res) => this.handleSetCookie(res)).then((res) => this.toJson(res)).catch((err) => Promise.reject(err));
   }
   get(url) {
@@ -448,18 +455,20 @@ var Request = class {
 
 // src/core/engine.ts
 var Engine = class {
-  BASE_URL = BASE_URL;
-  request = new Request();
-  // Flag to indicate whether the engine has visited the main page to get the cookies.
-  // See issue: https://github.com/pionxzh/Pornhub.js/issues/27
-  warmedUp = false;
-  constructor() {
+  constructor(customFetch) {
+    this.customFetch = customFetch;
+    this.request = new Request(this.customFetch);
     this.request.setHeader("Host", this.BASE_URL.replace("https://", ""));
     this.request.setHeader("Origin", this.BASE_URL);
     this.request.setHeader("Referer", `${this.BASE_URL}/`);
     this.request.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36");
     this.request.setCookie("platform", "pc");
   }
+  BASE_URL = BASE_URL;
+  request;
+  // Flag to indicate whether the engine has visited the main page to get the cookies.
+  // See issue: https://github.com/pionxzh/Pornhub.js/issues/27
+  warmedUp = false;
 };
 
 // src/apis/webmaster/categories.ts
@@ -1529,9 +1538,14 @@ function parseInfo2($) {
 
 // src/index.ts
 var PornHub = class {
-  engine = new Engine();
+  constructor(customFetch) {
+    this.customFetch = customFetch;
+    this.engine = new Engine(this.customFetch);
+    this.webMaster = new WebMaster(this.engine);
+  }
+  engine;
+  webMaster;
   route = Route;
-  webMaster = new WebMaster(this.engine);
   setAgent(agent) {
     this.engine.request.setAgent(agent);
   }

@@ -1,10 +1,10 @@
 import { URLSearchParams } from 'node:url'
+import type { RequestInfo, HeadersInit, RequestInit, Response } from 'node-fetch'
 import createDebug from 'debug'
 import fetch from 'node-fetch'
 import { getCheerio } from '../utils/cheerio'
 import { HttpStatusError, IllegalError } from '../utils/error'
 import eventEmitter from './eventEmitter'
-import type { HeadersInit, RequestInit, Response } from 'node-fetch'
 
 interface Cookie {
     value: string
@@ -32,6 +32,8 @@ export class Request {
     private _cookieStore: Map<string, Cookie> = new Map()
 
     eventEmitter = eventEmitter<EventsMap>()
+
+    constructor (private customFetch?: (input: RequestInfo | URL, init?: RequestInit | undefined) => Promise<Response>) {}
 
     setAgent(agent: RequestInit['agent']) {
         this._agent = agent
@@ -191,11 +193,22 @@ export class Request {
         const method = opts.method?.toUpperCase() || 'GET'
         debug(`[ RQST ] ${method} ${url}`)
 
-        const res = await fetch(url, {
-            ...opts,
-            headers,
-            ...(this._agent && { agent: this._agent }),
-        })
+        let res: Response | undefined;
+        if (this.customFetch) {
+
+            debug(`Custom fetch: ${url}`);
+            res = await this.customFetch(url, {
+                    ...opts,
+                    headers,
+                    ...(this._agent && { agent: this._agent }),
+                })
+        } else {
+            res = await fetch(url, {
+                ...opts,
+                headers,
+                ...(this._agent && { agent: this._agent }),
+            })
+        }
 
         debug(`[ RESP ] ${method} ${url} ${res.status} ${res.statusText}`)
 

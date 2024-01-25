@@ -1,3 +1,5 @@
+import type { RequestInfo, RequestInit, Response } from 'node-fetch'
+import type { AlbumSearchOptions, AutoCompleteOptions, GifSearchOptions, PornstarSearchOptions, VideoSearchOptions, RecommendedOptions } from './types'
 import { Route, getMainPage, login, logout } from './apis'
 import { getAutoComplete } from './apis/autoComplete'
 import { getToken } from './apis/getToken'
@@ -15,11 +17,9 @@ import { videoPage } from './scrapers/pages/video'
 import { albumSearch } from './scrapers/search/album'
 import { gifSearch } from './scrapers/search/gif'
 import { modelSearch } from './scrapers/search/model'
-import { pornstarSearch } from './scrapers/search/pornstar'
 import { videoSearch } from './scrapers/search/video'
-import type { AlbumSearchOptions, AutoCompleteOptions, GifSearchOptions, PornstarSearchOptions, RecommendedOptions, VideoSearchOptions } from './types'
 import type { ModelVideoListOptions, PornstarListOptions, VideoListOptions } from './types/ListOptions'
-import type { RequestInit } from 'node-fetch'
+import {pornstarSearch} from "./scrapers/search/pornstar";
 
 export * from './types'
 export * from './utils/error'
@@ -62,7 +62,9 @@ export class PornHub {
     engine = new Engine()
     webMaster = new WebMaster(this.engine)
 
-    constructor(config: PornHubConfig = {}) {
+    constructor(private customFetch?: (input: RequestInfo | URL, init?: RequestInit | undefined) => Promise<Response>, config: PornHubConfig = {}) {
+        this.engine = new Engine(this.customFetch)
+        this.webMaster = new WebMaster(this.engine)
         if (config.dumpPage) {
             const dumpPagePath = typeof config.dumpPage === 'string' ? config.dumpPage : ''
             this.engine.dumper.enable(dumpPagePath)

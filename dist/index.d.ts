@@ -1,7 +1,9 @@
-import { RequestInit, Response } from 'node-fetch';
+import { RequestInfo, RequestInit, Response } from 'node-fetch';
 import { URLSearchParams } from 'url';
 
 declare class Request {
+    private customFetch?;
+    constructor(customFetch?: ((input: RequestInfo | URL, init?: RequestInit | undefined) => Promise<Response>) | undefined);
     _agent: RequestInit['agent'];
     _headers: Record<string, string>;
     _cookie: Map<any, any>;
@@ -22,10 +24,11 @@ declare class Request {
 }
 
 declare class Engine {
+    private customFetch?;
     BASE_URL: string;
     request: Request;
     warmedUp: boolean;
-    constructor();
+    constructor(customFetch?: ((input: RequestInfo | URL, init?: RequestInit | undefined) => Promise<Response>) | undefined);
 }
 
 interface Counting {
@@ -527,7 +530,9 @@ declare class IllegalError extends Error {
 }
 
 declare class PornHub {
+    private customFetch?;
     engine: Engine;
+    webMaster: WebMaster;
     route: {
         mainPage(): string;
         authenticate(): string;
@@ -544,7 +549,7 @@ declare class PornHub {
         pornstarSearch(keyword: string, { page, order, }: PornstarSearchOptions): string;
         videoSearch(keyword: string, { page, order, hd, production, durationMin, durationMax, filterCategory, }: VideoSearchOptions): string;
     };
-    webMaster: WebMaster;
+    constructor(customFetch?: ((input: RequestInfo | URL, init?: RequestInit | undefined) => Promise<Response>) | undefined);
     setAgent(agent: RequestInit['agent']): void;
     setHeader(key: string, value: string): void;
     setCookie(key: string, value: any): void;
