@@ -17,10 +17,12 @@ export interface ModelPage {
     avatar: string
     cover: string
     rank: number
+    weeklyRank: number
     verified: boolean
     awarded: boolean
     premium: boolean
     subscribers: number
+    videosFrontpage: { link: string; thumb: string }[]
     featuredIn: Array<{ name: string; url: string }>
 
     uploadedVideoCount: number
@@ -246,6 +248,13 @@ function parseInfo($: CheerioAPI): ModelPage {
     const rankEl = $('div.rankingInfo > .infoBox > span')
     const rank = parseReadableNumber(rankEl.text().trim())
 
+    const weeklyRankEl = $('div.rankingInfo > div.infoBox.rankDetails > big')
+    const weeklyRank = parseReadableNumber(weeklyRankEl.text().trim())
+
+    const linkEl = $('ul.videos > li.videoBox > div.wrap > div.phimage > a')
+    let videosFrontpage:  {link: string, thumb: string}[] = [];
+    linkEl.each((_: any,e: any)=> {videosFrontpage.push({link:$(e).attr('href')!, thumb:$(e).find('img').attr('src')!})})
+
     const avatarEl = $('img#getAvatar, .topProfileHeader > .thumbImage > img')
     const avatar = getAttribute<string>(avatarEl, 'src', '')
 
@@ -314,6 +323,8 @@ function parseInfo($: CheerioAPI): ModelPage {
         avatar,
         cover,
         rank,
+        videosFrontpage,
+        weeklyRank,
         verified,
         awarded,
         premium,
