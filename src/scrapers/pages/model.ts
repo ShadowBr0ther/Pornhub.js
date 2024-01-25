@@ -22,7 +22,7 @@ export interface ModelPage {
     awarded: boolean
     premium: boolean
     subscribers: number
-    videosFrontpage: { link: string; thumb: string }[]
+    videosFrontpage: string[]
     featuredIn: Array<{ name: string; url: string }>
 
     uploadedVideoCount: number
@@ -214,13 +214,13 @@ export async function modelPage(engine: Engine, urlOrName: string): Promise<Mode
     return parseInfo($)
 }
 
-export async function modelVideoPage(engine: Engine, urlOrName: string): Promise<ModelPage> {
+export async function modelVideoPage(engine: Engine, urlOrName: string, page: number): Promise<ModelPage> {
 
     const name = UrlParser.getModelNameVideoPage(urlOrName)
     if (!name) throw new Error(`Invalid model input: ${urlOrName}`)
 
 
-    const url = Route.modelPageWithVideos(name)
+    const url = Route.modelPageWithVideos(name)+`?page=${page}`
     const html = await engine.request.raw(url)
     const $ = getCheerio(html)
 
@@ -266,9 +266,9 @@ function parseInfo($: CheerioAPI): ModelPage {
     const weeklyRankEl = $('div.infoBoxes > div.rankingInfo > div.infoBox:nth-child(2) > span.big')
     const weeklyRank = parseReadableNumber(weeklyRankEl.text().trim())
 
-    const linkEl = $('div.mostRecentPornstarVideos > ul.videos > li.videoBox > div.wrap > div.phimage > a')
-    let videosFrontpage:  {link: string, thumb: string}[] = [];
-    linkEl.each((_: any,e: any)=> {videosFrontpage.push({link:$(e).attr('href')!, thumb:$(e).find('img').attr('src')!})})
+    const linkEl = $('div.videoUList > ul.videos > li.videoBox > div.wrap > div.phimage > a')
+    let videosFrontpage: string[] = []; 
+    linkEl.each((_: any,e: any)=> {videosFrontpage.push($(e).attr('href')!)});
 
     const avatarEl = $('img#getAvatar, .topProfileHeader > .thumbImage > img')
     const avatar = getAttribute<string>(avatarEl, 'src', '')

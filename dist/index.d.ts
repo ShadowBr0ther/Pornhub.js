@@ -652,7 +652,7 @@ declare class PornHub {
      * Get model information with videos by url/ID
      * @param urlOrName Model name or page url
      */
-    modelVideo(urlOrName: string): Promise<ModelPage>;
+    modelVideo(urlOrName: string, page?: number): Promise<ModelPage>;
     /**
      * Get autocomplete result by keyword.
      */

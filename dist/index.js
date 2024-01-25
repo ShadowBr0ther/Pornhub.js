@@ -1314,11 +1314,11 @@ async function modelPage(engine, urlOrName) {
   const $ = getCheerio(html);
   return parseInfo($);
 }
-async function modelVideoPage(engine, urlOrName) {
+async function modelVideoPage(engine, urlOrName, page) {
   const name = UrlParser.getModelNameVideoPage(urlOrName);
   if (!name)
     throw new Error(`Invalid model input: ${urlOrName}`);
-  const url = Route.modelPageWithVideos(name);
+  const url = Route.modelPageWithVideos(name) + `?page=${page}`;
   const html = await engine.request.raw(url);
   const $ = getCheerio(html);
   return parseInfo($);
@@ -1752,8 +1752,8 @@ var PornHub = class {
    * Get model information with videos by url/ID
    * @param urlOrName Model name or page url
    */
-  modelVideo(urlOrName) {
-    return modelVideoPage(this.engine, urlOrName);
+  modelVideo(urlOrName, page = 1) {
+    return modelVideoPage(this.engine, urlOrName, page);
   }
   /**
    * Get autocomplete result by keyword.
