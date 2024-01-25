@@ -201,12 +201,27 @@ const parseVideoCount = (text: string) => {
 }
 
 export async function modelPage(engine: Engine, urlOrName: string): Promise<ModelPage> {
+
     const name = UrlParser.getModelName(urlOrName)
     if (!name) throw new Error(`Invalid model input: ${urlOrName}`)
+
 
     const url = Route.modelPage(name)
     const res = await engine.request.get(url)
     const html = await res.text()
+    const $ = getCheerio(html)
+
+    return parseInfo($)
+}
+
+export async function modelVideoPage(engine: Engine, urlOrName: string): Promise<ModelPage> {
+
+    const name = UrlParser.getModelNameVideoPage(urlOrName)
+    if (!name) throw new Error(`Invalid model input: ${urlOrName}`)
+
+
+    const url = Route.modelPageWithVideos(name)
+    const html = await engine.request.raw(url)
     const $ = getCheerio(html)
 
     return parseInfo($)

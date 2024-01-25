@@ -67,6 +67,9 @@ export const Route = {
     modelPage(name: string) {
         return urlcat(BASE_URL, '/model/:name', { name })
     },
+    modelPageWithVideos(name: string) {
+        return urlcat(BASE_URL, '/model/:name/videos', { name })
+    },
     /**
      * @url https://www.pornhub.com/model/luna-okko/videos
      */

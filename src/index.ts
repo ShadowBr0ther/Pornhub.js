@@ -8,7 +8,7 @@ import { WebMaster } from './core/webmaster'
 import { pornstarList } from './scrapers/list/pornstars'
 import { videoList } from './scrapers/list/videos'
 import { albumPage } from './scrapers/pages/album'
-import { modelPage, modelUploadedVideos } from './scrapers/pages/model'
+import { modelPage, modelUploadedVideos, modelVideoPage } from './scrapers/pages/model'
 import { photoPage } from './scrapers/pages/photo'
 import { pornstarPage } from './scrapers/pages/pornstar'
 import { randomPage } from './scrapers/pages/random'
@@ -58,9 +58,9 @@ export interface PornHubConfig {
 }
 
 export class PornHub {
-    route = Route
-    engine = new Engine()
-    webMaster = new WebMaster(this.engine)
+    engine: Engine;
+    webMaster: WebMaster;
+    route = Route;
 
     constructor(private customFetch?: (input: RequestInfo | URL, init?: RequestInit | undefined) => Promise<Response>, config: PornHubConfig = {}) {
         this.engine = new Engine(this.customFetch)
@@ -175,6 +175,14 @@ export class PornHub {
      */
     model(urlOrName: string) {
         return modelPage(this.engine, urlOrName)
+    }
+
+    /**
+     * Get model information with videos by url/ID
+     * @param urlOrName Model name or page url
+     */
+    modelVideo(urlOrName: string) {
+        return modelVideoPage(this.engine, urlOrName)
     }
 
     /**
