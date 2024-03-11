@@ -25,8 +25,34 @@ export class UrlParser {
         return name
     }
 
+    static getPornstarNameVideoPage(url: string) {
+        url = url.replace(/\/videos\/upload$/, '')
+        const UrlRule = /[\w]+\.pornhub\.com\/pornstar\/([a-zA-z0-9-]{1,30})/
+        const name = UrlRule.test(url) ? UrlRule.exec(url)![1] : slugify(url)
+        return name
+    }
+
+    static getChannelsName(url: string) {
+        const UrlRule = /[\w]+\.pornhub\.com\/channels\/([a-zA-z0-9-]{1,30})/
+        const name = UrlRule.test(url) ? UrlRule.exec(url)![1] : slugify(url)
+        return name
+    }
+    
+    static getChannelsNameVideoPage(url: string) {
+        url = url.replace(/\/videos\/upload$/, '')
+        const UrlRule = /[\w]+\.pornhub\.com\/channels\/([a-zA-z0-9-]{1,30})/
+        const name = UrlRule.test(url) ? UrlRule.exec(url)![1] : slugify(url)
+        return name
+    }
+
     static getModelName(url: string) {
         const UrlRule = /[\w]+\.pornhub\.com\/model\/([a-zA-z0-9-]{1,30})/
+        const name = UrlRule.test(url) ? UrlRule.exec(url)![1] : slugify(url)
+        return name
+    }
+
+    static getUsersName(url: string) {
+        const UrlRule = /[\w]+\.pornhub\.com\/users\/([a-zA-z0-9-]{1,30})/
         const name = UrlRule.test(url) ? UrlRule.exec(url)![1] : slugify(url)
         return name
     }

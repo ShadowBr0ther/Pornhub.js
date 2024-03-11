@@ -54,6 +54,7 @@ export interface ModelPage {
     turnOffs?: string
     videoViews?: number
     profileViews?: number
+    isGay?: boolean
 
     socials: {
         website?: string
@@ -195,8 +196,6 @@ const parseVideoCount = (text: string) => {
     if (!text) return 0
     const match = text.match(/Showing \d+-\d+ of (\d+)/)
     if (match) return parseReadableNumber(match[1])
-
-
     return 0
 }
 
@@ -216,17 +215,20 @@ export async function modelPage(engine: Engine, urlOrName: string): Promise<Mode
 
 export async function modelVideoPage(engine: Engine, urlOrName: string, page: number): Promise<ModelPage> {
 
+    //console.log("urlOrName", urlOrName)
     const name = UrlParser.getModelNameVideoPage(urlOrName)
     if (!name) throw new Error(`Invalid model input: ${urlOrName}`)
 
-
+    
     const url = Route.modelPageWithVideos(name)+`?page=${page}`
+    //console.log(url)
     const res = await engine.request.get(url)
     const html = await res.text()
     const $ = getCheerio(html)
 
     return parseInfo($)
 }
+
 
 export async function modelUploadedVideos(engine: Engine, urlOrName: string, options: ModelVideoListOptions): Promise<{
     data: VideoListResult[]
@@ -246,6 +248,12 @@ export async function modelUploadedVideos(engine: Engine, urlOrName: string, opt
         paging: parsePaging($),
         counting: parseCounting($),
     }
+}
+
+function getIsGayFlag($: CheerioAPI): boolean {
+    let html = $.html();
+    html = html.replace(/ /g, '');
+    return html.includes(`isGay="1"`)
 }
 
 function parseInfo($: CheerioAPI): ModelPage {
@@ -291,6 +299,8 @@ function parseInfo($: CheerioAPI): ModelPage {
 
     const premiumEl = $('.badge-username > .premium-icon')
     const premium = !!premiumEl.length
+
+    const isGay = getIsGayFlag($)
 
     const subscribersEl = $('div.tooltipTrig.infoBox[data-title^="Subscribers:"]')
     const subscribersText = getDataAttribute<string>(subscribersEl, 'title', '')
@@ -342,6 +352,7 @@ function parseInfo($: CheerioAPI): ModelPage {
         verified,
         awarded,
         premium,
+        isGay,
         subscribers,
         featuredIn,
         uploadedVideoCount,

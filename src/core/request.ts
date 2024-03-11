@@ -1,10 +1,9 @@
 import { URLSearchParams } from 'node:url'
-import type { RequestInfo, HeadersInit, RequestInit, Response } from 'node-fetch'
 import createDebug from 'debug'
 import fetch from 'node-fetch'
 import { getCheerio } from '../utils/cheerio'
 import { HttpStatusError, IllegalError } from '../utils/error'
-import eventEmitter from './eventEmitter'
+import type { HeadersInit, RequestInit, Response, RequestInfo } from 'node-fetch'
 
 interface Cookie {
     value: string
@@ -14,26 +13,13 @@ interface Cookie {
 const debug = createDebug('REQUEST')
 const nonExpireDate = new Date(9999, 1, 1)
 
-// eslint-disable-next-line ts/consistent-type-definitions
-type EventsMap = {
-    responseHTML: {
-        url: URL
-        html: string
-    }
-    responseJSON: {
-        url: URL
-        json: unknown
-    }
-}
-
 export class Request {
+
+    constructor (private customFetch?: (input: RequestInfo | URL, init?: RequestInit | undefined) => Promise<Response>) {}
+    
     private _agent: RequestInit['agent']
     private _headers: Record<string, string> = {}
     private _cookieStore: Map<string, Cookie> = new Map()
-
-    eventEmitter = eventEmitter<EventsMap>()
-
-    constructor (private customFetch?: (input: RequestInfo | URL, init?: RequestInit | undefined) => Promise<Response>) {}
 
     setAgent(agent: RequestInit['agent']) {
         this._agent = agent
@@ -136,11 +122,6 @@ export class Request {
         return res
     }
 
-    toJson(res: Response) {
-        const contentType = res.headers.get('content-type') || ''
-        return contentType.includes('json') ? res.json() : res.text()
-    }
-
     private _buildParams<U extends Record<string, any>>(data: U) {
         const params = new URLSearchParams()
         Object.keys(data).forEach((key) => {
@@ -167,29 +148,6 @@ export class Request {
         return this.fetch(url, opts)
     }
 
-    private async _handleListener(method: string, response: Response) {
-        if (method !== 'GET') return
-
-        const url = new URL(response.url)
-        const contentType = response.headers.get('content-type') || ''
-
-        if (this.eventEmitter.has('responseHTML')) {
-            if (contentType.includes('application/json')) {
-                const copiedRes = response.clone()
-                const json = await copiedRes.json()
-                this.eventEmitter.emit('responseJSON', { url, json })
-            }
-        }
-
-        if (this.eventEmitter.has('responseJSON')) {
-            if (contentType.includes('text/html')) {
-                const copiedRes = response.clone()
-                const html = await copiedRes.text()
-                this.eventEmitter.emit('responseHTML', { url, html })
-            }
-        }
-    }
-
     async fetch(url: string, opts: RequestInit = {}): Promise<Response> {
         const headers = Object.assign({}, this._headers, opts.headers, {
             cookie: this.cookieString,
@@ -198,20 +156,19 @@ export class Request {
         const method = opts.method?.toUpperCase() || 'GET'
         debug(`[ RQST ] ${method} ${url}`)
 
-        let res: Response | undefined;
+        let res = undefined
         if (this.customFetch) {
-
             debug(`Custom fetch: ${url}`);
             res = await this.customFetch(url, {
-                    ...opts,
-                    headers,
-                    ...(this._agent && { agent: this._agent }),
-                })
+                ...opts,
+                headers,
+                ...this._agent && { agent: this._agent },
+            })
         } else {
             res = await fetch(url, {
                 ...opts,
                 headers,
-                ...(this._agent && { agent: this._agent }),
+                ...this._agent && { agent: this._agent },
             })
         }
 
@@ -220,8 +177,6 @@ export class Request {
         if (res.url !== url) {
             debug(`Redirected from ${url} to ${res.url}`)
         }
-
-        this._handleListener(method, res)
 
         await this._checkStatus(res)
         this._handleSetCookie(res)

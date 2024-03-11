@@ -26,9 +26,6 @@ import type {
 import type { PornstarListOptions, VideoListOptions } from '../types/ListOptions';
 
 export const Route = {
-    /**
-     * @url https://www.pornhub.com/
-     */
     mainPage() {
         return `${BASE_URL}/`;
     },
@@ -56,30 +53,19 @@ export const Route = {
             alt: 0,
         });
     },
-    /**
-     * @url https://www.pornhub.com/album/7529441
-     */
+
     albumPage(id: string) {
         return urlcat(BASE_URL, '/album/:id', { id });
     },
-    /**
-     * @url https://www.pornhub.com/photo/833578021
-     */
     photoPage(id: string) {
         return urlcat(BASE_URL, '/photo/:id', { id });
     },
     videoPage(id: string) {
         return urlcat(BASE_URL, '/view_video.php', { viewkey: id });
     },
-    /**
-     * @url https://www.pornhub.com/pornstar/eva-elfie
-     */
     pornstarPage(name: string) {
         return urlcat(BASE_URL, '/pornstar/:name', { name });
     },
-    /**
-     * @url https://www.pornhub.com/model/luna-okko
-     */
     modelPage(name: string) {
         return urlcat(BASE_URL, '/model/:name', { name });
     },
@@ -95,9 +81,6 @@ export const Route = {
     modelVideosPage(name: string, page: number) {
         return urlcat(BASE_URL, '/model/:name/videos', { name, page });
     },
-    /**
-     * @url https://www.pornhub.com/channels/brazzers
-     */
     channelPage(name: string) {
         return urlcat(BASE_URL, '/channels/:name', { name });
     },
@@ -119,7 +102,6 @@ export const Route = {
             ...(page !== 1 && { page }),
         });
     },
-
     /**
      * @url https://www.pornhub.com/albums/female-straight-uncategorized?search=random
      */

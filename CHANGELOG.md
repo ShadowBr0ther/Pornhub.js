@@ -1,38 +1,5 @@
 # Changelog
 
-## [1.10.1](https://github.com/pionxzh/Pornhub.js/compare/v1.10.0...v1.10.1) (2023-11-25)
-
-
-### Bug Fixes
-
-* support non-latin characters in search keyword ([24d364d](https://github.com/pionxzh/Pornhub.js/commit/24d364d0bd82ab345ec0b44397cb60a52052435e))
-
-## [1.10.0](https://github.com/pionxzh/Pornhub.js/compare/v1.9.0...v1.10.0) (2023-11-05)
-
-
-### Features
-
-* support `dumpPage` for debugging ([295b30b](https://github.com/pionxzh/Pornhub.js/commit/295b30b8eb36a5bd8191b0ea72ad665da088cba2))
-
-## [1.9.0](https://github.com/pionxzh/Pornhub.js/compare/v1.8.0...v1.9.0) (2023-10-21)
-
-
-### Features
-
-* support `title` for album page ([3f9546f](https://github.com/pionxzh/Pornhub.js/commit/3f9546f65063b987e6a54e371ad1d9ae4d07e0b8))
-
-
-### Bug Fixes
-
-* `.random` should also includes `mediaDefinitions` ([8b570b3](https://github.com/pionxzh/Pornhub.js/commit/8b570b3ecac0887b4e702a145ffe1dccc1ca477d))
-
-## [1.8.0](https://github.com/pionxzh/Pornhub.js/compare/v1.7.4...v1.8.0) (2023-10-07)
-
-
-### Features
-
-* `.video()` now returns `mediaDefinition` as an alternative to `videos` ([ef1069e](https://github.com/pionxzh/Pornhub.js/commit/ef1069e4c1d8516b0041f41015baf6e502890d11)), closes [#90](https://github.com/pionxzh/Pornhub.js/issues/90)
-
 ## [1.7.4](https://github.com/pionxzh/Pornhub.js/compare/v1.7.3...v1.7.4) (2023-08-27)
 
 

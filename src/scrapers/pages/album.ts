@@ -6,7 +6,6 @@ import type { Engine } from '../../core/engine'
 import type { CheerioAPI } from 'cheerio'
 
 export interface AlbumPage {
-    title: string
     photos: Array<{
         url: string
         views: string
@@ -29,7 +28,6 @@ export async function albumPage(engine: Engine, urlOrId: string): Promise<AlbumP
     const $ = getCheerio(html)
 
     return {
-        title: $('h1.photoAlbumTitleV2').text().trim(),
         photos: parsePhotos($),
         provider: parseProvider($),
         tags: parseTag($),

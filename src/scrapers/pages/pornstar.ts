@@ -20,7 +20,8 @@ export interface PornstarPage {
 
     uploadedVideoCount: number
     taggedVideoCount: number
-
+    videosFrontpage: string[]
+    weeklyRank: number
     gender?: string
     born?: string
     birthPlace?: string
@@ -207,6 +208,18 @@ export async function pornstarPage(engine: Engine, urlOrName: string): Promise<P
     return parseInfo($)
 }
 
+export async function pornstarVideoPage(engine: Engine, urlOrName: string, page: number): Promise<PornstarPage> {
+
+    const name = UrlParser.getPornstarNameVideoPage(urlOrName)
+    if (!name) throw new Error(`Invalid model input: ${urlOrName}`)
+    const url = Route.pornstarPageWithVideos(name)+`?page=${page}`
+    const res = await engine.request.get(url)
+    const html = await res.text()
+    const $ = getCheerio(html)
+
+    return parseInfo($)
+}
+
 function parseInfo($: CheerioAPI): PornstarPage {
     const infoPieces = $('div.infoPiece').toArray()
     const info = Object.fromEntries(infoPieces.map((el) => {
@@ -235,6 +248,13 @@ function parseInfo($: CheerioAPI): PornstarPage {
     const bioEl = $('.biographyText .content div[itemprop="description"], .bio:not(:has(.aboutMeSection)) > .text')
     const bio = stripeSpaceMapper(bioEl.text().trim())
 
+    const weeklyRankEl = $('div.infoBoxes > div.rankingInfo > div.infoBox:nth-child(2) > span.big')
+    const weeklyRank = parseReadableNumber(weeklyRankEl.text().trim())
+
+    const linkEl = $('div.videoUList > ul.videos > li.videoBox > div.wrap > div.phimage > a')
+    let videosFrontpage: string[] = []; 
+    linkEl.each((_: any,e: any)=> {videosFrontpage.push($(e).attr('href')!)});
+
     const verifiedEl = $('.badge-username > .verifiedPornstar')
     const verified = !!verifiedEl.length
 
@@ -262,6 +282,13 @@ function parseInfo($: CheerioAPI): PornstarPage {
 
     let uploadedVideoCount = 0
     let taggedVideoCount = 0
+
+    const recentVideoCountEl = $('.mostRecentPornstarVideos > .pornstarVideosCounter')
+    uploadedVideoCount = parseVideoCount(recentVideoCountEl.text().trim())
+
+    const videoViewsFallback = $('.videoViews').data("title") as string
+    const videoViews = info.videoViews || parseReadableNumber(videoViewsFallback)
+
     if (verified) {
         const uploadedVideoCountEl = $('.pornstarUploadedVideos > .pornstarVideosCounter')
         uploadedVideoCount = parseVideoCount(uploadedVideoCountEl.text().trim())
@@ -280,6 +307,11 @@ function parseInfo($: CheerioAPI): PornstarPage {
             // non-verified pornstar are not allowed to upload videos
             // uploadedVideoCount = 0
         }
+    }
+
+    if (uploadedVideoCount === 0) {
+        const uploadedVideoCountEl = $('.profileVids > .section_header > .float-left > .showingInfo')
+        uploadedVideoCount = parseVideoCount(uploadedVideoCountEl.text().trim())
     }
 
     const socials = {
@@ -304,9 +336,12 @@ function parseInfo($: CheerioAPI): PornstarPage {
         premium,
         subscribers,
         featuredIn,
+        weeklyRank,
+        videosFrontpage,
         uploadedVideoCount,
         taggedVideoCount,
         ...info,
         socials,
+        videoViews
     } as PornstarPage
 }

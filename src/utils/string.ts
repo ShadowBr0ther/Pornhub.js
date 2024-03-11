@@ -1,37 +1,10 @@
 /**
- * Transform a string into a search keyword that can be used in search.
- *
- * @example
  * "luna test 1" => "luna+test+1"
  * "  luna    +test+1 " => "luna+test+1"
- * "（香港］ +学 生" => "香港+学+生"
  */
 export function searchify(keyword: string) {
     return keyword
-        .replace(/^[ \t]+|[ \t]+$/gi, '')
-        .replace(/[\.,'/:=\(\)&!\?@\[\]"\*\$#%\^;\|`\\~><¿\{\}\+]/gi, ' ')
-        .replace(/[éèëê]/gi, 'e')
-        .replace(/[äàâ]/gi, 'a')
-        .replace(/[üùû]/gi, 'u')
-        .replace(/[îï]/gi, 'i')
-        .replace(/ô/gi, 'o')
-        .replace(/ç/gi, 'c')
-        .replace(/【/gi, '')
-        .replace(/】/gi, '')
-        .replace(/〈/gi, '')
-        .replace(/〉/gi, '')
-        .replace(/〖/gi, '')
-        .replace(/〗/gi, '')
-        .replace(/（/gi, '')
-        .replace(/）/gi, '')
-        // eslint-disable-next-line no-irregular-whitespace
-        .replace(/　/gi, '')
-        .replace(/〔/gi, '')
-        .replace(/〕/gi, '')
-        .replace(/『/gi, '')
-        .replace(/』/gi, '')
-        .replace(/］/gi, '')
-        .replace(/［/gi, '')
+        .replace(/[^a-zA-Z0-9\s]/g, ' ')
         .trim()
         .split(/\s+/)
         .join('+')

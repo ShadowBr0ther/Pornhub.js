@@ -120,7 +120,7 @@ var BASE_URL = "https://www.pornhub.com";
 
 // src/utils/string.ts
 function searchify(keyword) {
-  return keyword.replace(/^[ \t]+|[ \t]+$/gi, "").replace(/[\.,'/:=\(\)&!\?@\[\]"\*\$#%\^;\|`\\~><¿\{\}\+]/gi, " ").replace(/[éèëê]/gi, "e").replace(/[äàâ]/gi, "a").replace(/[üùû]/gi, "u").replace(/[îï]/gi, "i").replace(/ô/gi, "o").replace(/ç/gi, "c").replace(/【/gi, "").replace(/】/gi, "").replace(/〈/gi, "").replace(/〉/gi, "").replace(/〖/gi, "").replace(/〗/gi, "").replace(/（/gi, "").replace(/）/gi, "").replace(/　/gi, "").replace(/〔/gi, "").replace(/〕/gi, "").replace(/『/gi, "").replace(/』/gi, "").replace(/］/gi, "").replace(/［/gi, "").trim().split(/\s+/).join("+");
+  return keyword.replace(/[^a-zA-Z0-9\s]/g, " ").trim().split(/\s+/).join("+");
 }
 function dashify(keywords) {
   if (!Array.isArray(keywords))
@@ -133,9 +133,6 @@ function slugify(keyword) {
 
 // src/apis/route.ts
 var Route = {
-  /**
-   * @url https://www.pornhub.com/
-   */
   mainPage() {
     return `${BASE_URL}/`;
   },
@@ -154,10 +151,7 @@ var Route = {
   /**
    * @url https://www.pornhub.com/video/search_autocomplete?q=random&orientation=straight&pornstars=1&alt=0&token=xxx
    */
-  autocomplete(keyword, {
-    token,
-    sexualOrientation = "straight"
-  }) {
+  autocomplete(keyword, { token, sexualOrientation = "straight" }) {
     return urlcat(BASE_URL, "/video/search_autocomplete", {
       q: keyword,
       orientation: sexualOrientation,
@@ -166,47 +160,38 @@ var Route = {
       alt: 0
     });
   },
-  /**
-   * @url https://www.pornhub.com/album/7529441
-   */
   albumPage(id) {
     return urlcat(BASE_URL, "/album/:id", { id });
   },
-  /**
-   * @url https://www.pornhub.com/photo/833578021
-   */
   photoPage(id) {
     return urlcat(BASE_URL, "/photo/:id", { id });
   },
   videoPage(id) {
     return urlcat(BASE_URL, "/view_video.php", { viewkey: id });
   },
-  /**
-   * @url https://www.pornhub.com/pornstar/eva-elfie
-   */
   pornstarPage(name) {
     return urlcat(BASE_URL, "/pornstar/:name", { name });
   },
-  /**
-   * @url https://www.pornhub.com/model/luna-okko
-   */
   modelPage(name) {
     return urlcat(BASE_URL, "/model/:name", { name });
+  },
+  userPage(name) {
+    return urlcat(BASE_URL, "/users/:name", { name });
   },
   modelPageWithVideos(name) {
     return urlcat(BASE_URL, "/model/:name/videos", { name });
   },
-  /**
-   * @url https://www.pornhub.com/model/luna-okko/videos
-   */
+  pornstarPageWithVideos(name) {
+    return urlcat(BASE_URL, "/pornstar/:name/videos/upload", { name });
+  },
   modelVideosPage(name, page) {
     return urlcat(BASE_URL, "/model/:name/videos", { name, page });
   },
-  /**
-   * @url https://www.pornhub.com/channels/brazzers
-   */
   channelPage(name) {
     return urlcat(BASE_URL, "/channels/:name", { name });
+  },
+  channelPageWithVideos(name) {
+    return urlcat(BASE_URL, "/channels/:name/videos", { name });
   },
   /**
    * @url https://www.pornhub.com/random
@@ -214,14 +199,7 @@ var Route = {
   randomPage() {
     return urlcat(BASE_URL, "/random");
   },
-  /**
-   * @url https://www.pornhub.com/recommended
-   */
-  recommendedPage({
-    order = "Most Relevant",
-    page = 1,
-    sexualOrientation = "straight"
-  }) {
+  recommendedPage({ order = "Most Relevant", page = 1, sexualOrientation = "straight" }) {
     const orientation = sexualOrientation === "straight" ? void 0 : sexualOrientation;
     const pathTemplate = orientation ? "/:orientation/recommended" : "/recommended";
     return urlcat(BASE_URL, pathTemplate, {
@@ -251,11 +229,7 @@ var Route = {
   /**
    * @url https://www.pornhub.com/gifs/search?search=xxx
    */
-  gifSearch(keyword, {
-    page = 1,
-    order = "Most Relevant",
-    sexualOrientation = "straight"
-  }) {
+  gifSearch(keyword, { page = 1, order = "Most Relevant", sexualOrientation = "straight" }) {
     const o = GifOrderingMapping[order];
     const orientation = sexualOrientation === "straight" ? void 0 : sexualOrientation;
     const pathTemplate = orientation ? "/:orientation/gifs/search" : "/gifs/search";
@@ -269,11 +243,7 @@ var Route = {
   /**
    * @url https://www.pornhub.com/pornstars/search?search=hot
    */
-  pornstarSearch(keyword, {
-    page = 1,
-    order = "Most Relevant",
-    sexualOrientation = "straight"
-  }) {
+  pornstarSearch(keyword, { page = 1, order = "Most Relevant", sexualOrientation = "straight" }) {
     const o = PornstarOrderingMapping[order];
     const orientation = sexualOrientation === "straight" ? void 0 : sexualOrientation;
     const pathTemplate = orientation ? "/:orientation/pornstars/search" : "/pornstars/search";
@@ -328,7 +298,7 @@ var Route = {
       filterCategory,
       sexualOrientation = "straight"
     } = param;
-    const pathTemplate = sexualOrientation === "transgender" ? "transgender" : sexualOrientation === "gay" ? "/gayporn" : "/video";
+    const pathTemplate = sexualOrientation === "transgender" ? "transgender" : sexualOrientation === "gay" ? "/gay/video" : "/video";
     const o = VideoListOrderingMapping[order];
     return urlcat(BASE_URL, pathTemplate, {
       ...filterCategory && { c: filterCategory },
@@ -415,14 +385,14 @@ var WebmasterRoute = {
   search(keyword, options = {}) {
     var _a, _b, _c;
     const query = {
-      "search": keyword.split(" ").join("+"),
-      "page": options.page,
-      "period": options.period,
-      "ordering": options.ordering,
-      "thumbsize": options.thumbsize,
+      search: keyword.split(" ").join("+"),
+      page: options.page,
+      period: options.period,
+      ordering: options.ordering,
+      thumbsize: options.thumbsize,
       "tags[]": (_a = options.tags) == null ? void 0 : _a.join(","),
       "stars[]": (_b = options.stars) == null ? void 0 : _b.join(","),
-      "category": (_c = options.category) == null ? void 0 : _c.join(",")
+      category: (_c = options.category) == null ? void 0 : _c.join(",")
     };
     return urlcat(WebmasterBaseUrl, "/search", query);
   }
@@ -551,46 +521,9 @@ async function getAutoComplete(engine, keyword, options) {
   };
 }
 
-// src/core/dumper.ts
-import fs from "fs";
-import path from "path";
-import process from "process";
-import createDebug from "debug";
-var debug = createDebug("DUMP");
-var Dumper = class {
-  constructor(request) {
-    this.request = request;
-  }
-  enable(_dumpPagePath) {
-    const dumpPagePath = _dumpPagePath ? path.resolve(_dumpPagePath) : path.join(process.cwd(), "_dump");
-    if (!fs.existsSync(dumpPagePath)) {
-      fs.mkdirSync(dumpPagePath, { recursive: true });
-    }
-    this.request.eventEmitter.on("responseHTML", ({ url, html }) => {
-      const normalizedPath = this.getNormalizedUrlPath(url);
-      const filename = `${normalizedPath}.html`;
-      const filePath = path.join(dumpPagePath, filename);
-      debug(filePath);
-      fs.writeFileSync(filePath, html);
-    });
-    this.request.eventEmitter.on("responseJSON", ({ url, json }) => {
-      const normalizedPath = this.getNormalizedUrlPath(url);
-      const filename = `${normalizedPath}.json`;
-      const filePath = path.join(dumpPagePath, filename);
-      debug(filePath);
-      fs.writeFileSync(filePath, JSON.stringify(json, null, 4));
-    });
-  }
-  getNormalizedUrlPath(url) {
-    const now = Date.now();
-    const path2 = url.pathname.replace(/\/$/, "").replace(/\//g, "_") || "index";
-    return `${now}_${path2}`;
-  }
-};
-
 // src/core/request.ts
 import { URLSearchParams } from "url";
-import createDebug2 from "debug";
+import createDebug from "debug";
 import fetch from "node-fetch";
 
 // src/utils/error.ts
@@ -599,82 +532,8 @@ var HttpStatusError = class extends Error {
 var IllegalError = class extends Error {
 };
 
-// src/core/eventEmitter.ts
-function mitt(all) {
-  all = all || /* @__PURE__ */ new Map();
-  return {
-    /**
-     * A Map of event names to registered handler functions.
-     */
-    all,
-    /**
-     * Check whether an event handler of the given type exists.
-     * @param {string|symbol} type of event to check
-     * @memberOf mitt
-     */
-    has(type) {
-      return all.has(type);
-    },
-    /**
-     * Register an event handler for the given type.
-     * @param {string|symbol} type Type of event to listen for, or `'*'` for all events
-     * @param {Function} handler Function to call in response to given event
-     * @memberOf mitt
-     */
-    on(type, handler) {
-      const handlers = all.get(type);
-      if (handlers) {
-        handlers.push(handler);
-      } else {
-        all.set(type, [handler]);
-      }
-    },
-    /**
-     * Remove an event handler for the given type.
-     * If `handler` is omitted, all handlers of the given type are removed.
-     * @param {string|symbol} type Type of event to unregister `handler` from (`'*'` to remove a wildcard handler)
-     * @param {Function} [handler] Handler function to remove
-     * @memberOf mitt
-     */
-    off(type, handler) {
-      const handlers = all.get(type);
-      if (handlers) {
-        if (handler) {
-          handlers.splice(handlers.indexOf(handler) >>> 0, 1);
-        } else {
-          all.set(type, []);
-        }
-      }
-    },
-    /**
-     * Invoke all handlers for the given type.
-     * If present, `'*'` handlers are invoked after type-matched handlers.
-     *
-     * Note: Manually firing '*' handlers is not supported.
-     *
-     * @param {string|symbol} type The event type to invoke
-     * @param {Any} [evt] Any value (object is recommended and powerful), passed to each handler
-     * @memberOf mitt
-     */
-    emit(type, evt) {
-      let handlers = all.get(type);
-      if (handlers) {
-        handlers.slice().forEach((handler) => {
-          handler(evt);
-        });
-      }
-      handlers = all.get("*");
-      if (handlers) {
-        handlers.slice().forEach((handler) => {
-          handler(type, evt);
-        });
-      }
-    }
-  };
-}
-
 // src/core/request.ts
-var debug2 = createDebug2("REQUEST");
+var debug = createDebug("REQUEST");
 var nonExpireDate = new Date(9999, 1, 1);
 var Request = class {
   constructor(customFetch) {
@@ -683,20 +542,19 @@ var Request = class {
   _agent;
   _headers = {};
   _cookieStore = /* @__PURE__ */ new Map();
-  eventEmitter = mitt();
   setAgent(agent) {
     this._agent = agent;
   }
   setHeader(key, value) {
     if (key !== "Cookie")
-      debug2(`[Header] Set: ${key}=${value}`);
+      debug(`[Header] Set: ${key}=${value}`);
     this._headers[key] = value;
   }
   _checkCookieExpired() {
     const now = Date.now();
     this._cookieStore.forEach((cookie, key) => {
       if (cookie.expires.getTime() < now) {
-        debug2(`[Cookie] Expired: ${key}`);
+        debug(`[Cookie] Expired: ${key}`);
         this._cookieStore.delete(key);
       }
     });
@@ -718,14 +576,14 @@ var Request = class {
     return (_a = this._cookieStore.get(key)) == null ? void 0 : _a.value;
   }
   setCookie(key, value) {
-    debug2(`[Cookie] Set: ${key}=${value}`);
+    debug(`[Cookie] Set: ${key}=${value}`);
     this._cookieStore.set(key, {
       value,
       expires: nonExpireDate
     });
   }
   deleteCookie(key) {
-    debug2(`[Cookie] Del: ${key}`);
+    debug(`[Cookie] Del: ${key}`);
     this._cookieStore.delete(key);
   }
   async _checkStatus(res) {
@@ -766,15 +624,11 @@ var Request = class {
     if (!res.headers.raw()["set-cookie"])
       return res;
     res.headers.raw()["set-cookie"].forEach((item) => {
-      debug2(`[Cookie] Received Set-Cookie: ${item}`);
+      debug(`[Cookie] Received Set-Cookie: ${item}`);
       const [key, cookie] = this._parseCookieItem(item);
       this._cookieStore.set(key, cookie);
     });
     return res;
-  }
-  toJson(res) {
-    const contentType = res.headers.get("content-type") || "";
-    return contentType.includes("json") ? res.json() : res.text();
   }
   _buildParams(data) {
     const params = new URLSearchParams();
@@ -797,36 +651,16 @@ var Request = class {
     }
     return this.fetch(url, opts);
   }
-  async _handleListener(method, response) {
-    if (method !== "GET")
-      return;
-    const url = new URL(response.url);
-    const contentType = response.headers.get("content-type") || "";
-    if (this.eventEmitter.has("responseHTML")) {
-      if (contentType.includes("application/json")) {
-        const copiedRes = response.clone();
-        const json = await copiedRes.json();
-        this.eventEmitter.emit("responseJSON", { url, json });
-      }
-    }
-    if (this.eventEmitter.has("responseJSON")) {
-      if (contentType.includes("text/html")) {
-        const copiedRes = response.clone();
-        const html = await copiedRes.text();
-        this.eventEmitter.emit("responseHTML", { url, html });
-      }
-    }
-  }
   async fetch(url, opts = {}) {
     var _a;
     const headers = Object.assign({}, this._headers, opts.headers, {
       cookie: this.cookieString
     });
     const method = ((_a = opts.method) == null ? void 0 : _a.toUpperCase()) || "GET";
-    debug2(`[ RQST ] ${method} ${url}`);
-    let res;
+    debug(`[ RQST ] ${method} ${url}`);
+    let res = void 0;
     if (this.customFetch) {
-      debug2(`Custom fetch: ${url}`);
+      debug(`Custom fetch: ${url}`);
       res = await this.customFetch(url, {
         ...opts,
         headers,
@@ -839,11 +673,10 @@ var Request = class {
         ...this._agent && { agent: this._agent }
       });
     }
-    debug2(`[ RESP ] ${method} ${url} ${res.status} ${res.statusText}`);
+    debug(`[ RESP ] ${method} ${url} ${res.status} ${res.statusText}`);
     if (res.url !== url) {
-      debug2(`Redirected from ${url} to ${res.url}`);
+      debug(`Redirected from ${url} to ${res.url}`);
     }
-    this._handleListener(method, res);
     await this._checkStatus(res);
     this._handleSetCookie(res);
     return res;
@@ -864,7 +697,6 @@ var Engine = class {
   constructor(customFetch) {
     this.customFetch = customFetch;
     this.request = new Request(this.customFetch);
-    this.dumper = new Dumper(this.request);
     this.request.setHeader("Host", this.BASE_URL.replace("https://", ""));
     this.request.setHeader("Origin", this.BASE_URL);
     this.request.setHeader("Referer", `${this.BASE_URL}/`);
@@ -872,6 +704,7 @@ var Engine = class {
     this.request.setCookie("platform", "pc");
     this.request.setCookie("accessAgeDisclaimerPH", "1");
     this.request.setCookie("accessAgeDisclaimerUK", "1");
+    this.request.setCookie("adBlockAlertHidden", "1");
     this.request.setCookie("accessPH", "1");
     this.request.setCookie("age_verified", "1");
     this.request.setCookie("atatusScript", "hide");
@@ -880,7 +713,6 @@ var Engine = class {
   }
   BASE_URL = BASE_URL;
   request;
-  dumper;
   // Flag to indicate whether the engine has visited the main page to get the cookies.
   // See issue: https://github.com/pionxzh/Pornhub.js/issues/27
   warmedUp = false;
@@ -932,8 +764,30 @@ var UrlParser = class {
     const name = UrlRule.test(url) ? UrlRule.exec(url)[1] : slugify(url);
     return name;
   }
+  static getPornstarNameVideoPage(url) {
+    url = url.replace(/\/videos\/upload$/, "");
+    const UrlRule = /[\w]+\.pornhub\.com\/pornstar\/([a-zA-z0-9-]{1,30})/;
+    const name = UrlRule.test(url) ? UrlRule.exec(url)[1] : slugify(url);
+    return name;
+  }
+  static getChannelsName(url) {
+    const UrlRule = /[\w]+\.pornhub\.com\/channels\/([a-zA-z0-9-]{1,30})/;
+    const name = UrlRule.test(url) ? UrlRule.exec(url)[1] : slugify(url);
+    return name;
+  }
+  static getChannelsNameVideoPage(url) {
+    url = url.replace(/\/videos\/upload$/, "");
+    const UrlRule = /[\w]+\.pornhub\.com\/channels\/([a-zA-z0-9-]{1,30})/;
+    const name = UrlRule.test(url) ? UrlRule.exec(url)[1] : slugify(url);
+    return name;
+  }
   static getModelName(url) {
     const UrlRule = /[\w]+\.pornhub\.com\/model\/([a-zA-z0-9-]{1,30})/;
+    const name = UrlRule.test(url) ? UrlRule.exec(url)[1] : slugify(url);
+    return name;
+  }
+  static getUsersName(url) {
+    const UrlRule = /[\w]+\.pornhub\.com\/users\/([a-zA-z0-9-]{1,30})/;
     const name = UrlRule.test(url) ? UrlRule.exec(url)[1] : slugify(url);
     return name;
   }
@@ -1090,7 +944,7 @@ var WebMaster = class {
    * @url https://www.pornhub.com/webmasters/search?search=keyword
    * @example
    * const results = await pornhub.webMaster.search('keyword', { page: 2, period: 'weekly' })
-   */
+  */
   search(keyword, options = {}) {
     return search(this.engine, keyword, options);
   }
@@ -1111,7 +965,7 @@ var WebMaster = class {
    * @param urlOrId Video ID or page url
    * @example
    * const isActive = await pornhub.webMaster.isVideoActive('ph5a9634c9a827e')
-   */
+  */
   isVideoActive(urlOrId) {
     return video_is_active(this.engine, urlOrId);
   }
@@ -1122,7 +976,7 @@ var WebMaster = class {
    * @example
    * const code = await pornhub.webMaster.getVideoEmbedCode('ph5a9634c9a827e')
    * // <iframe src="https://www.pornhub.com/embed/xxxxxx" frameborder="0" width="560" height="340" scrolling="no" allowfullscreen></iframe>
-   */
+  */
   getVideoEmbedCode(urlOrId) {
     return video_embed_code(this.engine, urlOrId);
   }
@@ -1132,7 +986,7 @@ var WebMaster = class {
    * @param page Page number, default: 1
    * @example
    * const deletedVideos = await pornhub.webMaster.getDeletedVideos(2)
-   */
+  */
   getDeletedVideos(page = 1) {
     return deleted(this.engine, page);
   }
@@ -1143,7 +997,7 @@ var WebMaster = class {
    * @example
    * const tags = await pornhub.webMaster.getTags('s')
    * // ['solo', 'squirting', 'stockings', ...]
-   */
+  */
   getTags(letter = "a") {
     return tags(this.engine, letter);
   }
@@ -1153,7 +1007,7 @@ var WebMaster = class {
    * @example
    * const categories = await pornhub.webMaster.getCategories()
    * // [{ id: "65", category: "threesome" }, { id: "105", category: "60fps" }]
-   */
+  */
   getCategories() {
     return categories(this.engine);
   }
@@ -1162,7 +1016,7 @@ var WebMaster = class {
    * @url https://www.pornhub.com/webmasters/stars
    * @example
    * const pornstars = await pornhub.webMaster.getPornstars()
-   */
+  */
   getPornstars() {
     return stars(this.engine);
   }
@@ -1170,7 +1024,7 @@ var WebMaster = class {
    * Get pornstar detail list
    * @url https://www.pornhub.com/webmasters/stars_detailed
    * const pornstars = await pornhub.webMaster.getPornstarsDetail()
-   */
+  */
   getPornstarsDetail() {
     return stars_detailed(this.engine);
   }
@@ -1225,8 +1079,8 @@ function parseResult($) {
   const result = list.map((_, el) => {
     const item = $(el);
     const name = item.find(".performerCardName").text().trim();
-    const path2 = getAttribute(item.find("a.title"), "href", "");
-    const url = urlcat2(BASE_URL, path2);
+    const path = getAttribute(item.find("a.title"), "href", "");
+    const url = urlcat2(BASE_URL, path);
     const views = item.find(".viewsNumber").text().replace("Views", "").trim() || "0";
     const videoNum = Number.parseInt(item.find(".videosNumber").text().replace("Videos", "")) || 0;
     const rank = Number.parseInt(item.find(".rank_number").text()) || 0;
@@ -1267,8 +1121,8 @@ function parseVideoResult($, container) {
     const item = $(el);
     const thumb = item.find(".linkVideoThumb").eq(0);
     const title = getAttribute(thumb, "title", "");
-    const path2 = getAttribute(thumb, "href", "");
-    const url = urlcat3(BASE_URL, path2);
+    const path = getAttribute(thumb, "href", "");
+    const url = urlcat3(BASE_URL, path);
     const id = UrlParser.getVideoID(url);
     const img = item.find("img");
     const preview = getAttribute(img, "src", "");
@@ -1308,7 +1162,6 @@ async function albumPage(engine, urlOrId) {
   const html = await res.text();
   const $ = getCheerio(html);
   return {
-    title: $("h1.photoAlbumTitleV2").text().trim(),
     photos: parsePhotos($),
     provider: parseProvider($),
     tags: parseTag($)
@@ -1342,6 +1195,12 @@ function parseTag($) {
 function parseReadableNumber(viewsText) {
   if (!viewsText)
     return 0;
+  viewsText = viewsText.split(":").pop() || "";
+  viewsText = viewsText.trim();
+  viewsText = viewsText.split(" ").shift() || "";
+  if (viewsText == "") {
+    return 0;
+  }
   const views = viewsText.replace(/,/g, "");
   if (views.includes("K")) {
     return Number.parseFloat(views) * 1e3;
@@ -1352,6 +1211,97 @@ function parseReadableNumber(viewsText) {
   } else {
     return Number.parseFloat(views);
   }
+}
+
+// src/scrapers/pages/channels.ts
+async function channelPage(engine, urlOrName) {
+  const name = UrlParser.getChannelsName(urlOrName);
+  if (!name)
+    throw new Error(`Invalid channel input: ${urlOrName}`);
+  const url = Route.channelPage(name);
+  const res = await engine.request.get(url);
+  const html = await res.text();
+  const $ = getCheerio(html);
+  return parseInfo($);
+}
+async function channelVideoPage(engine, urlOrName, page) {
+  const name = UrlParser.getChannelsNameVideoPage(urlOrName);
+  if (!name)
+    throw new Error(`Invalid channel input: ${urlOrName}`);
+  const url = Route.channelPageWithVideos(name) + `?page=${page}`;
+  const res = await engine.request.get(url);
+  const html = await res.text();
+  const $ = getCheerio(html);
+  return parseInfo($);
+}
+function getStats($, value) {
+  const el = $(`#stats > .info`);
+  let result = "0";
+  el.each((_, elem) => {
+    if ($(elem).find("span").text().trim() === value) {
+      result = $(elem).text().trim();
+    }
+  });
+  return result;
+}
+function getDescription($, value) {
+  const el = $(`.cdescriptions > .joined`);
+  let result = "0";
+  el.each((_, elem) => {
+    if (value === "DESCRIPTION") {
+      if ($(elem).find("span").length === 0) {
+        result = $(elem).text().trim();
+      }
+    } else {
+      if ($(elem).find(".channelInfoHeadlines").text().trim() === value) {
+        if (value === "WEBSITE") {
+          result = $(elem).find("a").attr("href") || "";
+        }
+        if (value === "BY") {
+          result = $(elem).find("a").attr("href") || "";
+          if (result !== "") {
+            result = "https://www.pornhub.com" + result;
+          }
+        }
+        if (value === "JOINED") {
+          let desc = $(elem).find(":not(.channelInfoHeadlines)");
+          result = $(desc).text().trim();
+        }
+      }
+    }
+  });
+  return result;
+}
+function parseInfo($) {
+  const name = $("#channelsProfile .titleWrapper .title > h1").text().trim();
+  const avatarEl = $("img#getAvatar, .topProfileHeader > .thumbImage > img");
+  const avatar = getAttribute(avatarEl, "src", "");
+  const coverEl = $("img#coverPictureDefault, .topProfileHeader > .coverImage > img");
+  const cover = getAttribute(coverEl, "src", "");
+  const linkEl = $(".widgetContainer ul.videos .thumbnail-info-wrapper .title a");
+  let videosFrontpage = [];
+  linkEl.each((_, e) => {
+    videosFrontpage.push($(e).attr("href"));
+  });
+  const about = getDescription($, "DESCRIPTION");
+  const videoViews = parseReadableNumber(getStats($, "VIDEO VIEWS"));
+  const subscribers = parseReadableNumber(getStats($, "SUBSCRIBERS"));
+  const uploadedVideoCount = parseReadableNumber(getStats($, "VIDEOS"));
+  const rank = parseReadableNumber(getStats($, "RANK"));
+  const website = getDescription($, "WEBSITE");
+  return {
+    name,
+    about,
+    avatar,
+    cover,
+    rank,
+    subscribers,
+    videosFrontpage,
+    uploadedVideoCount,
+    videoViews,
+    website,
+    byChannel: getDescription($, "BY")
+  };
 }
 
 // src/scrapers/pages/model.ts
@@ -1489,7 +1439,7 @@ async function modelPage(engine, urlOrName) {
   const res = await engine.request.get(url);
   const html = await res.text();
   const $ = getCheerio(html);
-  return parseInfo($);
+  return parseInfo2($);
 }
 async function modelVideoPage(engine, urlOrName, page) {
   const name = UrlParser.getModelNameVideoPage(urlOrName);
@@ -1499,7 +1449,7 @@ async function modelVideoPage(engine, urlOrName, page) {
   const res = await engine.request.get(url);
   const html = await res.text();
   const $ = getCheerio(html);
-  return parseInfo($);
+  return parseInfo2($);
 }
 async function modelUploadedVideos(engine, urlOrName, options) {
   const name = UrlParser.getModelName(urlOrName);
@@ -1515,7 +1465,12 @@ async function modelUploadedVideos(engine, urlOrName, options) {
     counting: parseCounting($)
   };
 }
-function parseInfo($) {
+function getIsGayFlag($) {
+  let html = $.html();
+  html = html.replace(/ /g, "");
+  return html.includes(`isGay="1"`);
+}
+function parseInfo2($) {
   const infoPieces = $("div.infoPiece").toArray();
   const info = Object.fromEntries(infoPieces.map((el) => {
     const item = $(el);
@@ -1548,6 +1503,7 @@ function parseInfo($) {
   const awarded = !!awardEl.length;
   const premiumEl = $(".badge-username > .premium-icon");
   const premium = !!premiumEl.length;
+  const isGay = getIsGayFlag($);
   const subscribersEl = $('div.tooltipTrig.infoBox[data-title^="Subscribers:"]');
   const subscribersText = getDataAttribute(subscribersEl, "title", "").replace("Subscribers: ", "");
   const subscribersText2 = $('div.infoBox:has(.title:contains("Subscribers")) > span').text().trim();
@@ -1587,6 +1543,7 @@ function parseInfo($) {
     verified,
     awarded,
     premium,
+    isGay,
     subscribers,
     featuredIn,
     uploadedVideoCount,
@@ -1782,9 +1739,19 @@ async function pornstarPage(engine, urlOrName) {
   const res = await engine.request.get(url);
   const html = await res.text();
   const $ = getCheerio(html);
-  return parseInfo2($);
+  return parseInfo3($);
 }
-function parseInfo2($) {
+async function pornstarVideoPage(engine, urlOrName, page) {
+  const name = UrlParser.getPornstarNameVideoPage(urlOrName);
+  if (!name)
+    throw new Error(`Invalid model input: ${urlOrName}`);
+  const url = Route.pornstarPageWithVideos(name) + `?page=${page}`;
+  const res = await engine.request.get(url);
+  const html = await res.text();
+  const $ = getCheerio(html);
+  return parseInfo3($);
+}
+function parseInfo3($) {
   const infoPieces = $("div.infoPiece").toArray();
   const info = Object.fromEntries(infoPieces.map((el) => {
     const item = $(el);
@@ -1804,6 +1771,13 @@ function parseInfo2($) {
   const about = aboutEl.text().trim();
   const bioEl = $('.biographyText .content div[itemprop="description"], .bio:not(:has(.aboutMeSection)) > .text');
   const bio = stripeSpaceMapper2(bioEl.text().trim());
+  const weeklyRankEl = $("div.infoBoxes > div.rankingInfo > div.infoBox:nth-child(2) > span.big");
+  const weeklyRank = parseReadableNumber(weeklyRankEl.text().trim());
+  const linkEl = $("div.videoUList > ul.videos > li.videoBox > div.wrap > div.phimage > a");
+  let videosFrontpage = [];
+  linkEl.each((_, e) => {
+    videosFrontpage.push($(e).attr("href"));
+  });
   const verifiedEl = $(".badge-username > .verifiedPornstar");
   const verified = !!verifiedEl.length;
   const awardEl = $(".badge-username > .trophyPornStar");
@@ -1822,6 +1796,10 @@ function parseInfo2($) {
   }).filter((item) => item.name && item.url);
   let uploadedVideoCount = 0;
   let taggedVideoCount = 0;
+  const recentVideoCountEl = $(".mostRecentPornstarVideos > .pornstarVideosCounter");
+  uploadedVideoCount = parseVideoCount2(recentVideoCountEl.text().trim());
+  const videoViewsFallback = $(".videoViews").data("title");
+  const videoViews = info.videoViews || parseReadableNumber(videoViewsFallback);
   if (verified) {
     const uploadedVideoCountEl = $(".pornstarUploadedVideos > .pornstarVideosCounter");
     uploadedVideoCount = parseVideoCount2(uploadedVideoCountEl.text().trim());
@@ -1835,6 +1813,10 @@ function parseInfo2($) {
         taggedVideoCount = parseVideoCount2(videoCounter.text().trim());
       }
     }
+  }
+  if (uploadedVideoCount === 0) {
+    const uploadedVideoCountEl = $(".profileVids > .section_header > .float-left > .showingInfo");
+    uploadedVideoCount = parseVideoCount2(uploadedVideoCountEl.text().trim());
   }
   const socials = {
     website: getAttribute($(".socialList a:has(.officialSiteIcon)"), "href"),
@@ -1856,10 +1838,13 @@ function parseInfo2($) {
     premium,
     subscribers,
     featuredIn,
+    weeklyRank,
+    videosFrontpage,
     uploadedVideoCount,
     taggedVideoCount,
     ...info,
-    socials
+    socials,
+    videoViews
   };
 }
 
@@ -1881,7 +1866,6 @@ async function videoPage(engine, urlOrId) {
   return {
     id,
     url,
-    mediaDefinitions: parseMediaDefinition(html),
     ...parseByDom(html, $)
   };
 }
@@ -1942,32 +1926,6 @@ function parseByLdJson($) {
     };
   }
 }
-var mediaDefinitionRegex = /{"defaultQuality":(true|false|\d+),"format":"(\w+)","videoUrl":"(.+?)","quality":(("\d+")|(\[[\d,]*\]))(,"remote":(true|false))?}/g;
-function parseMediaDefinition(html) {
-  const mediaDefinitions = [];
-  while (true) {
-    const match = mediaDefinitionRegex.exec(html);
-    if (!match)
-      break;
-    try {
-      const [, _defaultQuality, format, videoUrl, _quality, , _qualityArray, , , _remote] = match;
-      const defaultQuality = _defaultQuality === "true" ? true : _defaultQuality === "false" ? false : +_defaultQuality;
-      const quality = _qualityArray ? JSON.parse(_qualityArray) : +_quality;
-      const remote = _remote === "true";
-      mediaDefinitions.push({
-        defaultQuality,
-        format,
-        videoUrl,
-        quality,
-        remote
-      });
-    } catch (error) {
-      console.warn(`Failed to parse media definition from input: "${match}"`);
-      console.warn(error);
-    }
-  }
-  return mediaDefinitions;
-}
 
 // src/scrapers/pages/random.ts
 async function randomPage(engine) {
@@ -1980,7 +1938,6 @@ async function randomPage(engine) {
   return {
     id,
     url: Route.videoPage(id),
-    mediaDefinitions: parseMediaDefinition(html),
     ...parseByDom(html, $)
   };
 }
@@ -1994,6 +1951,62 @@ async function recommended(engine, options) {
   return {
     data: parseVideoResult($, ".recommendedVideosContainer"),
     paging: parsePaging($)
+  };
+}
+
+// src/scrapers/pages/users.ts
+function getStats2($, value) {
+  const el = $(`.subViewsInfoContainer > li > a`);
+  let result = "0";
+  el.each((_, elem) => {
+    if ($(elem).find(".connections").text().trim().toLowerCase() === value.toLowerCase()) {
+      result = $(elem).find(".number").text().trim();
+    }
+  });
+  return result;
+}
+function getProfileViews($) {
+  const elDt = $(".moreInformation > dt");
+  const elDd = $(".moreInformation > dd");
+  let result = "0";
+  elDt.each((i, elem) => {
+    if ($(elem).text().trim().toLowerCase() === "profile views:") {
+      result = $(elDd[i]).text().trim();
+    }
+  });
+  return result;
+}
+async function usersPage(engine, urlOrName) {
+  const name = UrlParser.getUsersName(urlOrName);
+  if (!name)
+    throw new Error(`Invalid model input: ${urlOrName}`);
+  const url = Route.userPage(name);
+  const res = await engine.request.get(url);
+  const html = await res.text();
+  const $ = getCheerio(html);
+  return parseInfo4($);
+}
+function parseInfo4($) {
+  const name = $(".profileUserName > a").text().trim();
+  const avatarEl = $("img#getAvatar, .topProfileHeader > .thumbImage > img");
+  const avatar = getAttribute(avatarEl, "src", "");
+  const coverEl = $("img#coverPictureDefault, .topProfileHeader > .coverImage > img");
+  const cover = getAttribute(coverEl, "src", "");
+  const aboutEl = $(".aboutMeText");
+  const about = aboutEl.text().trim();
+  const subscribers = parseReadableNumber(getStats2($, "Subscribers"));
+  const uploadedVideoCount = parseReadableNumber(getStats2($, "Videos"));
+  const videoViews = parseReadableNumber(getStats2($, "Video Views"));
+  const profileViews = parseReadableNumber(getProfileViews($));
+  return {
+    name,
+    about,
+    avatar,
+    cover,
+    subscribers,
+    uploadedVideoCount,
+    videoViews,
+    profileViews
   };
 }
 
@@ -2047,10 +2060,10 @@ function parseResult3($) {
     const item = $(el);
     const video = item.find("video");
     const poster = getAttribute(video, "poster", "");
-    const path2 = getAttribute(item.find("a"), "href", "");
+    const path = getAttribute(item.find("a"), "href", "");
     return {
       title: item.find(".title").text(),
-      url: urlcat4(BASE_URL, path2),
+      url: urlcat4(BASE_URL, path),
       mp4: getDataAttribute(video, "mp4", ""),
       webm: getDataAttribute(video, "webm", ""),
       preview: removeProtectionBracket(poster)
@@ -2082,11 +2095,11 @@ function parseResult4($) {
   const $list = $("ul#pornstarsSearchResult li div.wrap");
   const result = $list.map((_, el) => {
     const item = $(el);
-    const path2 = getAttribute(item.find("a"), "href", "");
+    const path = getAttribute(item.find("a"), "href", "");
     const img = item.find("img");
     return {
       name: item.find(".title").text(),
-      url: urlcat5(BASE_URL, path2),
+      url: urlcat5(BASE_URL, path),
       views: item.find(".pstarViews").text().replace("views", "").trim() || "0",
       videoNum: Number.parseInt(item.find(".videosNumber").text()) || 0,
       rank: Number.parseInt(item.find(".rank_number").text()) || 0,
@@ -2098,14 +2111,10 @@ function parseResult4($) {
 
 // src/index.ts
 var PornHub = class {
-  constructor(customFetch, config = {}) {
+  constructor(customFetch) {
     this.customFetch = customFetch;
     this.engine = new Engine(this.customFetch);
     this.webMaster = new WebMaster(this.engine);
-    if (config.dumpPage) {
-      const dumpPagePath = typeof config.dumpPage === "string" ? config.dumpPage : "";
-      this.engine.dumper.enable(dumpPagePath);
-    }
   }
   engine;
   webMaster;
@@ -2133,7 +2142,9 @@ var PornHub = class {
    * @deprecated This method is no longer needed.
    */
   async warmup() {
-    console.warn("`warmup` has been deprecated. You can safely remove this method call. It has been handled internally.");
+    console.warn(
+      "`warmup` has been deprecated. You can safely remove this method call. It has been handled internally."
+    );
   }
   /**
    * Login with account and password.
@@ -2191,6 +2202,13 @@ var PornHub = class {
     return pornstarPage(this.engine, urlOrName);
   }
   /**
+   * Get pornstar information with videos by url/ID
+   * @param urlOrName Pornstar name or page url
+   */
+  pornstarVideo(urlOrName, page = 1) {
+    return pornstarVideoPage(this.engine, urlOrName, page);
+  }
+  /**
    * Get model information by url/ID
    * @param urlOrName Model name or page url
    */
@@ -2198,11 +2216,32 @@ var PornHub = class {
     return modelPage(this.engine, urlOrName);
   }
   /**
+   * Get user information by url/ID
+   * @param urlOrName user name or page url
+   */
+  user(urlOrName) {
+    return usersPage(this.engine, urlOrName);
+  }
+  /**
    * Get model information with videos by url/ID
    * @param urlOrName Model name or page url
    */
   modelVideo(urlOrName, page = 1) {
     return modelVideoPage(this.engine, urlOrName, page);
+  }
+  /**
+   * Get channel information by url/ID
+   * @param urlOrName Channel name or page url
+   */
+  channels(urlOrName) {
+    return channelPage(this.engine, urlOrName);
+  }
+  /**
+   * Get channel information with videos by url/ID
+   * @param urlOrName Channel name or page url
+   */
+  channelsVideo(urlOrName, page = 1) {
+    return channelVideoPage(this.engine, urlOrName, page);
   }
   /**
    * Get list of model's uploaded videos
