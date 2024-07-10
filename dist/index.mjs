@@ -1322,23 +1322,23 @@ var KeyMapper = {
     key: () => "interestedIn",
     value: defaultMapper
   },
-  "Gender": {
+  Gender: {
     key: () => "gender",
     value: defaultMapper
   },
-  "Height": {
+  Height: {
     key: () => "height",
     value: defaultMapper
   },
-  "Weight": {
+  Weight: {
     key: () => "weight",
     value: defaultMapper
   },
-  "Ethnicity": {
+  Ethnicity: {
     key: () => "ethnicity",
     value: defaultMapper
   },
-  "Background": {
+  Background: {
     key: () => "background",
     value: defaultMapper
   },
@@ -1354,11 +1354,11 @@ var KeyMapper = {
     key: () => "fakeBoobs",
     value: yesNoMapper
   },
-  "Tattoos": {
+  Tattoos: {
     key: () => "tattoos",
     value: yesNoMapper
   },
-  "Piercings": {
+  Piercings: {
     key: () => "piercings",
     value: yesNoMapper
   },
@@ -1386,7 +1386,7 @@ var KeyMapper = {
     key: () => "interests",
     value: defaultMapper
   },
-  "Born": {
+  Born: {
     key: () => "born",
     value: defaultMapper
   },
@@ -1394,7 +1394,7 @@ var KeyMapper = {
     key: () => "birthPlace",
     value: defaultMapper
   },
-  "Birthplace": {
+  Birthplace: {
     key: () => "birthPlace",
     value: defaultMapper
   },
@@ -1402,7 +1402,7 @@ var KeyMapper = {
     key: () => "starSign",
     value: defaultMapper
   },
-  "Measurements": {
+  Measurements: {
     key: () => "measurements",
     value: defaultMapper
   },
@@ -1410,7 +1410,7 @@ var KeyMapper = {
     key: () => "cityAndCountry",
     value: defaultMapper
   },
-  "Endowment": {
+  Endowment: {
     key: () => "endowment",
     value: defaultMapper
   },
@@ -1441,15 +1441,22 @@ async function modelPage(engine, urlOrName) {
   const $ = getCheerio(html);
   return parseInfo2($);
 }
-async function modelVideoPage(engine, urlOrName, page) {
+async function modelVideoPage(engine, urlOrName, page, startPageFix) {
   const name = UrlParser.getModelNameVideoPage(urlOrName);
   if (!name)
     throw new Error(`Invalid model input: ${urlOrName}`);
-  const url = Route.modelPageWithVideos(name) + `?page=${page}`;
-  const res = await engine.request.get(url);
-  const html = await res.text();
-  const $ = getCheerio(html);
-  return parseInfo2($);
+  if (page === 1 && startPageFix) {
+    const res = await engine.request.get(Route.modelPage(name));
+    const html = await res.text();
+    const $ = getCheerio(html);
+    return parseInfo2($);
+  } else {
+    const url = `${Route.modelPageWithVideos(name)}?page=${page}`;
+    const res = await engine.request.get(url);
+    const html = await res.text();
+    const $ = getCheerio(html);
+    return parseInfo2($);
+  }
 }
 async function modelUploadedVideos(engine, urlOrName, options) {
   const name = UrlParser.getModelName(urlOrName);
@@ -1468,24 +1475,26 @@ async function modelUploadedVideos(engine, urlOrName, options) {
 function getIsGayFlag($) {
   let html = $.html();
   html = html.replace(/ /g, "");
-  return html.includes(`isGay="1"`);
+  return html.includes('isGay="1"');
 }
 function parseInfo2($) {
   const infoPieces = $("div.infoPiece").toArray();
-  const info = Object.fromEntries(infoPieces.map((el) => {
-    const item = $(el);
-    const key = item.find("span:nth-child(1)").text().trim().replace(":", "");
-    const value = item.find("span:nth-child(2)").text().trim() || item.text().replace(item.find("span:nth-child(1)").text(), "").trim();
-    const mapper = KeyMapper[key] || DefaultMapper;
-    return [mapper.key(key), mapper.value(value)];
-  }));
+  const info = Object.fromEntries(
+    infoPieces.map((el) => {
+      const item = $(el);
+      const key = item.find("span:nth-child(1)").text().trim().replace(":", "");
+      const value = item.find("span:nth-child(2)").text().trim() || item.text().replace(item.find("span:nth-child(1)").text(), "").trim();
+      const mapper = KeyMapper[key] || DefaultMapper;
+      return [mapper.key(key), mapper.value(value)];
+    })
+  );
   const name = $(".nameSubscribe > .name").text().trim();
   const rankEl = $("div.rankingInfo > .infoBox > span");
   const rank = parseReadableNumber(rankEl.text().trim());
   const weeklyRankEl = $("div.infoBoxes > div.rankingInfo > div.infoBox:nth-child(2) > span.big");
   const weeklyRank = parseReadableNumber(weeklyRankEl.text().trim());
   const linkEl = $("div.videoUList > ul.videos > li.videoBox > div.wrap > div.phimage > a");
-  let videosFrontpage = [];
+  const videosFrontpage = [];
   linkEl.each((_, e) => {
     videosFrontpage.push($(e).attr("href"));
   });
@@ -1531,6 +1540,9 @@ function parseInfo2($) {
     amazonWishList: getAttribute($(".socialList a:has(.amazonWishlistIcon)"), "href") || getAttribute($(".socialList a:has(.amazonWLIcon)"), "href")
   };
   const mostRecentVideos = parseVideoResult($, ".mostRecentPornstarVideos");
+  if (videosFrontpage.length === 0) {
+    videosFrontpage.push(...mostRecentVideos.map((video) => video.url.split("pornhub.com")[1]));
+  }
   return {
     name,
     about,
@@ -2226,8 +2238,8 @@ var PornHub = class {
    * Get model information with videos by url/ID
    * @param urlOrName Model name or page url
    */
-  modelVideo(urlOrName, page = 1) {
-    return modelVideoPage(this.engine, urlOrName, page);
+  modelVideo(urlOrName, page = 1, startPageFix = false) {
+    return modelVideoPage(this.engine, urlOrName, page, startPageFix);
   }
   /**
    * Get channel information by url/ID

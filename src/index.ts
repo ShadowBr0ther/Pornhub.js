@@ -197,8 +197,8 @@ export class PornHub {
      * Get model information with videos by url/ID
      * @param urlOrName Model name or page url
      */
-    modelVideo(urlOrName: string, page = 1) {
-        return modelVideoPage(this.engine, urlOrName, page);
+    modelVideo(urlOrName: string, page = 1, startPageFix = false) {
+        return modelVideoPage(this.engine, urlOrName, page, startPageFix);
     }
 
     /**
