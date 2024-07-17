@@ -236,8 +236,6 @@ export async function modelVideoPage(
 
         return parseInfo($);
     }
-
-    // console.log(url)
 }
 
 export async function modelUploadedVideos(
@@ -360,7 +358,7 @@ function parseInfo($: CheerioAPI): ModelPage {
     const mostRecentVideos = parseVideoResult($, '.mostRecentPornstarVideos');
 
     if (videosFrontpage.length === 0) {
-        videosFrontpage.push(...mostRecentVideos.map((video) => video.url.split('pornhub.com')[1]));
+        videosFrontpage.push(...mostRecentVideos.map((video) => video.url.split('pornhub.org')[1]));
     }
     return {
         name,

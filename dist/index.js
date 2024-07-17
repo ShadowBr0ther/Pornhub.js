@@ -164,7 +164,7 @@ var CountryMapping = {
 };
 
 // src/utils/constant.ts
-var BASE_URL = "https://www.pornhub.com";
+var BASE_URL = "https://www.pornhub.org";
 
 // src/utils/string.ts
 function searchify(keyword) {
@@ -748,7 +748,10 @@ var Engine = class {
     this.request.setHeader("Host", this.BASE_URL.replace("https://", ""));
     this.request.setHeader("Origin", this.BASE_URL);
     this.request.setHeader("Referer", `${this.BASE_URL}/`);
-    this.request.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36");
+    this.request.setHeader(
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"
+    );
     this.request.setCookie("platform", "pc");
     this.request.setCookie("accessAgeDisclaimerPH", "1");
     this.request.setCookie("accessAgeDisclaimerUK", "1");
@@ -757,6 +760,8 @@ var Engine = class {
     this.request.setCookie("age_verified", "1");
     this.request.setCookie("atatusScript", "hide");
     this.request.setCookie("cookiesBannerSeen", "1");
+    this.request.setCookie("cookieConsent", "2");
+    this.request.setCookie("cookieBannerState", "1");
     this.request.setCookie("hasVisited", "1");
   }
   BASE_URL = BASE_URL;
@@ -793,60 +798,60 @@ async function deleted(engine, page) {
 // src/utils/url.ts
 var UrlParser = class {
   static getVideoID(url) {
-    const UrlRule = /[\w]+\.pornhub\.com\/view_video\.php\?viewkey=([a-zA-z0-9]{1,30})/;
+    const UrlRule = /[\w]+\.pornhub\.org\/view_video\.php\?viewkey=([a-zA-z0-9]{1,30})/;
     const id = UrlRule.test(url) ? UrlRule.exec(url)[1] : url;
     return id;
   }
   static getAlbumID(url) {
-    const UrlRule = /[\w]+\.pornhub\.com\/album\/([0-9]{1,30})/;
+    const UrlRule = /[\w]+\.pornhub\.org\/album\/([0-9]{1,30})/;
     const id = UrlRule.test(url) ? UrlRule.exec(url)[1] : url;
     return id;
   }
   static getPhotoID(url) {
-    const UrlRule = /[\w]+\.pornhub\.com\/photo\/([0-9]{1,30})/;
+    const UrlRule = /[\w]+\.pornhub\.org\/photo\/([0-9]{1,30})/;
     const id = UrlRule.test(url) ? UrlRule.exec(url)[1] : url;
     return id;
   }
   static getPornstarName(url) {
-    const UrlRule = /[\w]+\.pornhub\.com\/pornstar\/([a-zA-z0-9-]{1,30})/;
+    const UrlRule = /[\w]+\.pornhub\.org\/pornstar\/([a-zA-z0-9-]{1,30})/;
     const name = UrlRule.test(url) ? UrlRule.exec(url)[1] : slugify(url);
     return name;
   }
   static getPornstarNameVideoPage(url) {
     url = url.replace(/\/videos\/upload$/, "");
-    const UrlRule = /[\w]+\.pornhub\.com\/pornstar\/([a-zA-z0-9-]{1,30})/;
+    const UrlRule = /[\w]+\.pornhub\.org\/pornstar\/([a-zA-z0-9-]{1,30})/;
     const name = UrlRule.test(url) ? UrlRule.exec(url)[1] : slugify(url);
     return name;
   }
   static getChannelsName(url) {
-    const UrlRule = /[\w]+\.pornhub\.com\/channels\/([a-zA-z0-9-]{1,30})/;
+    const UrlRule = /[\w]+\.pornhub\.org\/channels\/([a-zA-z0-9-]{1,30})/;
     const name = UrlRule.test(url) ? UrlRule.exec(url)[1] : slugify(url);
     return name;
   }
   static getChannelsNameVideoPage(url) {
     url = url.replace(/\/videos\/upload$/, "");
-    const UrlRule = /[\w]+\.pornhub\.com\/channels\/([a-zA-z0-9-]{1,30})/;
+    const UrlRule = /[\w]+\.pornhub\.org\/channels\/([a-zA-z0-9-]{1,30})/;
     const name = UrlRule.test(url) ? UrlRule.exec(url)[1] : slugify(url);
     return name;
   }
   static getModelName(url) {
-    const UrlRule = /[\w]+\.pornhub\.com\/model\/([a-zA-z0-9-]{1,30})/;
+    const UrlRule = /[\w]+\.pornhub\.org\/model\/([a-zA-z0-9-]{1,30})/;
     const name = UrlRule.test(url) ? UrlRule.exec(url)[1] : slugify(url);
     return name;
   }
   static getUsersName(url) {
-    const UrlRule = /[\w]+\.pornhub\.com\/users\/([a-zA-z0-9-]{1,30})/;
+    const UrlRule = /[\w]+\.pornhub\.org\/users\/([a-zA-z0-9-]{1,30})/;
     const name = UrlRule.test(url) ? UrlRule.exec(url)[1] : slugify(url);
     return name;
   }
   static getModelNameVideoPage(url) {
     url = url.replace(/\/videos$/, "");
-    const UrlRule = /[\w]+\.pornhub\.com\/model\/([a-zA-z0-9-]{1,30})/;
+    const UrlRule = /[\w]+\.pornhub\.org\/model\/([a-zA-z0-9-]{1,30})/;
     const name = UrlRule.test(url) ? UrlRule.exec(url)[1] : slugify(url);
     return name;
   }
   static getChannelName(url) {
-    const UrlRule = /[\w]+\.pornhub\.com\/channels\/([a-zA-z0-9-]{1,30})/;
+    const UrlRule = /[\w]+\.pornhub\.org\/channels\/([a-zA-z0-9-]{1,30})/;
     const name = UrlRule.test(url) ? UrlRule.exec(url)[1] : slugify(url);
     return name;
   }
@@ -1353,6 +1358,7 @@ function parseInfo($) {
 }
 
 // src/scrapers/pages/model.ts
+var fs = __toESM(require("fs"));
 var defaultMapper = (value) => value;
 var yesNoMapper = (value) => value === "Yes";
 var stripeSpaceMapper = (value) => value.split(/\s+/).join(" ");
@@ -1494,9 +1500,11 @@ async function modelVideoPage(engine, urlOrName, page, startPageFix) {
   if (!name)
     throw new Error(`Invalid model input: ${urlOrName}`);
   if (page === 1 && startPageFix) {
+    console.log(Route.modelPage(name));
     const res = await engine.request.get(Route.modelPage(name));
     const html = await res.text();
     const $ = getCheerio(html);
+    fs.writeFileSync("debug.html", html);
     return parseInfo2($);
   } else {
     const url = `${Route.modelPageWithVideos(name)}?page=${page}`;
@@ -1589,7 +1597,7 @@ function parseInfo2($) {
   };
   const mostRecentVideos = parseVideoResult($, ".mostRecentPornstarVideos");
   if (videosFrontpage.length === 0) {
-    videosFrontpage.push(...mostRecentVideos.map((video) => video.url.split("pornhub.com")[1]));
+    videosFrontpage.push(...mostRecentVideos.map((video) => video.url.split("pornhub.org")[1]));
   }
   return {
     name,
