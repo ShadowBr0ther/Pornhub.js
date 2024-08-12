@@ -74,7 +74,7 @@ function getDescription($: CheerioAPI, value: "DESCRIPTION" | "WEBSITE" | "BY" |
                 if (value === "BY"){
                     result = $(elem).find('a').attr('href')||""
                     if (result !== "") {
-                        result = "https://www.pornhub.com"+result; 
+                        result = "https://www.pornhub.org"+result;
                     }
                 }
                 

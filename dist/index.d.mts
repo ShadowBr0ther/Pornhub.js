@@ -1,12 +1,10 @@
-import { RequestInfo, RequestInit, Response } from 'node-fetch';
+import { RequestInfo, RequestInit, Response, fetch } from 'undici';
 
 declare class Request {
     private customFetch?;
     constructor(customFetch?: ((input: RequestInfo | URL, init?: RequestInit | undefined) => Promise<Response>) | undefined);
-    private _agent;
     private _headers;
     private _cookieStore;
-    setAgent(agent: RequestInit['agent']): void;
     setHeader(key: string, value: string): void;
     private _checkCookieExpired;
     private get cookieString();
@@ -725,9 +723,7 @@ declare class PornHub {
         videoList(param: VideoListOptions): string;
         pornstarList(param: PornstarListOptions): string;
     };
-    constructor(customFetch?: ((input: URL | RequestInfo, init?: RequestInit | undefined) => Promise<Response>) | undefined);
-    setAgent(agent: RequestInit['agent']): void;
-    setHeader(key: string, value: string): void;
+    constructor(customFetch?: typeof fetch | undefined);
     getCookies(): Record<string, string>;
     getCookie(key: string): string | undefined;
     setCookie(key: string, value: string): void;

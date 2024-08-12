@@ -1,9 +1,9 @@
 import { URLSearchParams } from 'node:url'
 import createDebug from 'debug'
-import fetch from 'node-fetch'
+import {fetch} from 'undici'
 import { getCheerio } from '../utils/cheerio'
 import { HttpStatusError, IllegalError } from '../utils/error'
-import type { HeadersInit, RequestInit, Response, RequestInfo } from 'node-fetch'
+import type { HeadersInit, RequestInfo, RequestInit, Response } from 'undici'
 
 interface Cookie {
     value: string
@@ -14,16 +14,11 @@ const debug = createDebug('REQUEST')
 const nonExpireDate = new Date(9999, 1, 1)
 
 export class Request {
-
     constructor (private customFetch?: (input: RequestInfo | URL, init?: RequestInit | undefined) => Promise<Response>) {}
     
-    private _agent: RequestInit['agent']
     private _headers: Record<string, string> = {}
     private _cookieStore: Map<string, Cookie> = new Map()
-
-    setAgent(agent: RequestInit['agent']) {
-        this._agent = agent
-    }
+    
 
     setHeader(key: string, value: string) {
         if (key !== 'Cookie') debug(`[Header] Set: ${key}=${value}`)
@@ -111,9 +106,9 @@ export class Request {
     }
 
     private _handleSetCookie(res: Response) {
-        if (!res.headers.raw()['set-cookie']) return res
+        if (!res.headers.getSetCookie()) return res
 
-        res.headers.raw()['set-cookie'].forEach((item) => {
+        res.headers.getSetCookie().forEach((item) => {
             debug(`[Cookie] Received Set-Cookie: ${item}`)
             const [key, cookie] = this._parseCookieItem(item)
             this._cookieStore.set(key, cookie)
@@ -156,19 +151,17 @@ export class Request {
         const method = opts.method?.toUpperCase() || 'GET'
         debug(`[ RQST ] ${method} ${url}`)
 
-        let res = undefined
+        let res
         if (this.customFetch) {
             debug(`Custom fetch: ${url}`);
             res = await this.customFetch(url, {
                 ...opts,
-                headers,
-                ...this._agent && { agent: this._agent },
+                headers
             })
         } else {
             res = await fetch(url, {
                 ...opts,
-                headers,
-                ...this._agent && { agent: this._agent },
+                headers
             })
         }
 

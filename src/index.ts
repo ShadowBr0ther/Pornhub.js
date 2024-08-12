@@ -30,7 +30,8 @@ import type {
     VideoSearchOptions,
 } from './types';
 import type { ModelVideoListOptions, PornstarListOptions, VideoListOptions } from './types/ListOptions';
-import type { RequestInfo, RequestInit, Response } from 'node-fetch';
+
+import {fetch} from "undici";
 
 export * from './types';
 export * from './utils/error';
@@ -64,17 +65,9 @@ export class PornHub {
     webMaster: WebMaster;
     route = Route;
 
-    constructor(private customFetch?: (input: URL | RequestInfo, init?: RequestInit | undefined) => Promise<Response>) {
+    constructor(private customFetch?: typeof fetch) {
         this.engine = new Engine(this.customFetch);
         this.webMaster = new WebMaster(this.engine);
-    }
-
-    setAgent(agent: RequestInit['agent']) {
-        this.engine.request.setAgent(agent);
-    }
-
-    setHeader(key: string, value: string) {
-        this.engine.request.setHeader(key, value);
     }
 
     getCookies() {
