@@ -1,4 +1,15 @@
-import { categories, deleted, search, stars, stars_detailed, tags, video_by_id, video_embed_code, video_is_active } from '../apis/webmaster'
+import {
+    categories,
+    deleted,
+    search,
+    stars,
+    stars_detailed,
+    tags,
+    video_by_id, video_by_id_parse,
+    video_embed_code,
+    video_is_active,
+    WebmasterVideoById,
+} from '../apis/webmaster';
 import type { Engine } from './engine'
 import type { LowerLetter, ThumbSize, WebmasterSearchOptions } from '../types'
 
@@ -26,6 +37,10 @@ export class WebMaster {
      */
     getVideo(urlOrId: string, thumbsize?: ThumbSize) {
         return video_by_id(this.engine, urlOrId, thumbsize)
+    }
+
+    parseVideo(body: WebmasterVideoById) {
+        return video_by_id_parse(body)
     }
 
     /**

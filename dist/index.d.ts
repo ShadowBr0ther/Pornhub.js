@@ -632,6 +632,7 @@ declare class WebMaster {
      * const video = await pornhub.webMaster.getVideo('ph5a9634c9a827e')
      */
     getVideo(urlOrId: string, thumbsize?: ThumbSize): Promise<VideoDetail | undefined>;
+    parseVideo(body: WebmasterVideoById): Promise<VideoDetail | undefined>;
     /**
      * Get video active status by url/id (deleted video will be false)
      * @url https://www.pornhub.com/webmasters/is_video_active?id={ID}

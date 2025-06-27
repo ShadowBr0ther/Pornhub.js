@@ -52,24 +52,24 @@
     "postpublish": "rimraf ./dist ./tmp_release"
   },
   "dependencies": {
-    "cheerio": "^1.0.0-rc.12",
-    "debug": "^4.3.4",
+    "cheerio": "^1.1.0",
+    "debug": "^4.4.1",
     "node-fetch": "^2.7.0",
     "urlcat": "^3.1.0"
   },
   "devDependencies": {
     "@pionxzh/eslint-config-ts": "^0.4.1",
-    "@types/cheerio": "^0.22.31",
-    "@types/debug": "^4.1.8",
+    "@types/cheerio": "^0.22.35",
+    "@types/debug": "^4.1.12",
     "@types/node": "^20.4.1",
-    "@types/node-fetch": "^2.6.4",
-    "clean-publish": "^4.2.0",
+    "@types/node-fetch": "^2.6.12",
+    "clean-publish": "^4.4.0",
     "eslint": "^8.44.0",
     "esno": "^0.16.3",
-    "rimraf": "^5.0.1",
-    "tsup": "^7.1.0",
+    "rimraf": "^5.0.10",
+    "tsup": "^7.2.0",
     "typescript": "^5.1.6",
-    "vite": "^4.4.2",
+    "vite": "^4.5.14",
     "vitest": "^0.33.0"
   },
   "overrides": {

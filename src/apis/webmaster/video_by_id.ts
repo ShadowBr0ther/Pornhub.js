@@ -14,3 +14,7 @@ export async function video_by_id(engine: Engine, urlOrId: string, thumbsize: Th
     const result = await res.json() as WebmasterVideoById
     return videoTransform(result.video)
 }
+
+export async function video_by_id_parse(body: WebmasterVideoById): Promise<VideoDetail | undefined> {
+    return videoTransform(body.video)
+}
